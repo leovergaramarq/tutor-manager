@@ -2,14 +2,28 @@ var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3').verbose();
 var db = new sqlite3.Database('example.db');
-
+const jwt = require('jsonwebtoken');
+var verifyToken = require('../helpers/jwt')
 
 /* GET home page. */
 
 
-router.get('/set', function(req, res, next) {
-
+router.get('/protegida', verifyToken, function(req, res, next) {
+  console.log(req.user)
+    res.send('acceso atorizado')
 });
+
+router.get('/generatetoken' , (req,res) => {
+    const id  =  'leonardo'
+    jwt.sign(id , 'secret_key' , (err,token) => {
+      if(err){
+          res.status(400).send({msg : 'Error'})
+      }
+  else {
+          res.send({msg:'success' , token: token})
+      }
+    })
+})
 
 router.get('/get', function(req, res, next) {
   let obj = []
@@ -42,15 +56,12 @@ router.post('/get', function(req, res, next) {
 
 });
 
-router.post('/addhour', function(req, res, next) {
-  const {username, year, month, week, day, hour} = req.body
-  let obj = []
-  db.run(`INSERT INTO hours(username, year, month, week, day, hour) VALUES(?,?,?,?,?,?)`, [username, year, month, week, day, hour], function(err) {
+router.post('/addhour', verifyToken, function(req, res, next) {
+  const {year, month, week, day, hour} = req.body
+  db.run(`INSERT INTO hours(username, year, month, week, day, hour) VALUES(?,?,?,?,?,?)`, [req.user, year, month, week, day, hour], function(err) {
     if (err) {
       return console.log(err.message);
     }
-    // get the last insert id
-    console.log(`A row has been inserted with rowid ${this.lastID}`);
     res.send('hour added')
   });
 
@@ -58,10 +69,9 @@ router.post('/addhour', function(req, res, next) {
   db.close();
 });
 
-router.post('/gethour', function(req, res, next) {
-  const {username} = req.body
+router.post('/gethour', verifyToken, function(req, res, next) {
   let obj = []
-  db.all(`SELECT * FROM hours  where username='${username}'`, function(err, rows) {
+  db.all(`SELECT * FROM hours  where username='${req.user}'`, function(err, rows) {
     rows.forEach(row =>{
       obj.push(row)
     })
@@ -71,5 +81,6 @@ router.post('/gethour', function(req, res, next) {
   // close the database connection
   db.close();
 });
+
 
 module.exports = router;
