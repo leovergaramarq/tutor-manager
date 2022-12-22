@@ -9,8 +9,7 @@ import usersRouter from './routes/users.js';
 
 // database
 
-const Database = sqlite3.verbose().Database;
-const db = new Database('example.db');
+const db = new (sqlite3.verbose().Database)('example.db');
 
 db.serialize(() => {
 	// Create user table
