@@ -1,54 +1,59 @@
-var createError = require('http-errors');
-var express = require('express');
-const bodyParser = require('body-parser')
-var logger = require('morgan');
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('example.db');
+import express from 'express';
+import morgan from 'morgan';
+import cors from 'cors';
+import createError from 'http-errors';
+import sqlite3 from 'sqlite3';
 
-db.serialize(function() {
+import indexRouter from './routes/index.js';
+import usersRouter from './routes/users.js';
 
- // Create user table
- db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)");
- // Create hour table
- db.run("CREATE TABLE IF NOT EXISTS hours (id INTEGER PRIMARY KEY, username TEXT, year INTEGER, month INTEGER, week INTEGER, day INTEGER, hour INTEGER)");
+// database
 
+const Database = sqlite3.verbose().Database;
+const db = new Database('example.db');
+
+db.serialize(() => {
+	// Create user table
+	db.run('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)');
+	// Create hour table
+	db.run('CREATE TABLE IF NOT EXISTS hours (id INTEGER PRIMARY KEY, username TEXT, year INTEGER, month INTEGER, week INTEGER, day INTEGER, hour INTEGER)');
 });
 
 db.close();
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 
-var app = express();
+// app setup
 
-// view engine setup
+const app = express();
 
+app.set('spaces', 2);
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({
-    extended: true
-}))
-
+app.use(morgan('dev'));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+app.use((req, res, next) => {
+	next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use((err, req, res, next) => {
+	// set locals, only providing error in development
+	res.locals.message = err.message;
+	res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.send('error');
+	// render the error page
+	// res.status(err.status || 500);
+	res.status(404).json({ message: 'Not found' });
 });
 
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
-});
+// const PORT = process.env.PORT || 3000
+// app.listen(PORT, () => {
+// 	console.log(`Server listening on ${PORT}`);
+// });
+
+export default app;
