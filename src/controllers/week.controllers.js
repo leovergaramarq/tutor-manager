@@ -1,8 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { DB_PATH } from '../constants.js';
-import getWeekBounds, { weekMatrix } from '../helpers/week.js';
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);
+import { getEasternTime, getWeekBounds, weekMatrix } from '../helpers/week.js';
+import { schedule as sch } from '../helpers/schedule.js';
 
 export function get(req, res) {
 	const { week } = req.params;
@@ -10,7 +9,7 @@ export function get(req, res) {
 	if(new Date(week) == 'Invalid Date') {
 		return res.status(400).json({ message: 'Invalid date' });
 	}
-	const [sunday, saturday] = getWeekBounds(new Date(week.replace(/-/g, '/')));
+	const [sunday, saturday] = getWeekBounds(getEasternTime(new Date(week.replace(/-/g, '/'))));
 	
 	db.serialize(() => {
 		db.all(`SELECT * FROM Hour WHERE
@@ -33,3 +32,10 @@ export function get(req, res) {
 	// close the database connection
 	// db.close();
 }
+
+export function schedule(req, res) {
+	const { week } = req.body; // if week=0 is provided, schedule the current week; otherwise, schedule the next week
+	sch(week === 0 ? week : 1, (status, message) => res.status(status).json({ message }));
+}
+
+const db = new (sqlite3.verbose().Database)(DB_PATH);

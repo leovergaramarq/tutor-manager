@@ -1,11 +1,8 @@
 import jwt from 'jsonwebtoken';
 import sqlite3 from 'sqlite3';
-import verifyToken from '../helpers/jwt.js';
 
 import { JWT_SECRET } from '../config.js'
 import { DB_PATH, JWT_EXPIRY_TIME } from '../constants.js';
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);
 
 export function hello(req, res, next) {
 	db.serialize(() => {
@@ -84,3 +81,5 @@ export function login(req, res, next) {
 
 	// db.close();
 }
+
+const db = new (sqlite3.verbose().Database)(DB_PATH);

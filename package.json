@@ -16,6 +16,7 @@
     "jsonwebtoken": "^9.0.0",
     "morgan": "~1.9.1",
     "pug": "2.0.0-beta11",
+    "puppeteer": "^19.4.1",
     "sqlite3": "^5.1.4"
   },
   "type": "module",
