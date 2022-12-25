@@ -10,6 +10,7 @@ import weeksRouter from './routes/week.routes.js';
 
 import setSchedule from './helpers/schedule.js';
 import { loadPreferences } from './helpers/preferences.js';
+import initDB from './initDB.js';
 
 // app setup
 
@@ -20,8 +21,6 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-loadPreferences(app, () => setSchedule(app));
 
 // routes
 app.use('/', indexRouter);
@@ -44,5 +43,7 @@ app.use((req, res, next) => {
 	// res.status(err.status || 500);
 	res.status(404).json({ message: 'Not found' });
 });
+
+initDB(() => loadPreferences(app, () => setSchedule(app)));
 
 export default app;

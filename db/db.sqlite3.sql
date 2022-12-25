@@ -14,10 +14,9 @@ CREATE TABLE IF NOT EXISTS "Hour" (
 	"Hour"	INTEGER NOT NULL,
 	PRIMARY KEY("HourID" AUTOINCREMENT)
 );
-CREATE TABLE IF NOT EXISTS "Preferences" (
+CREATE TABLE IF NOT EXISTS "Preference" (
 	"HourToSchedule"	INTEGER NOT NULL DEFAULT 12,
 	"DayToSchedule"	INTEGER DEFAULT 6,
 	"KeepLogin"	INTEGER DEFAULT 0
 );
-INSERT INTO "User" VALUES (1,'leovergaramarq@gmail.com','asdasd');
 COMMIT;
