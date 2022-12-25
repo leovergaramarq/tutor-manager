@@ -1,13 +1,13 @@
 import sqlite3 from 'sqlite3';
 import { DB_PATH } from '../constants.js';
 
-const db = new (sqlite3.verbose().Database)(DB_PATH);
-
 export function add(req, res) {
 	const { year, month, day, hour } = req.body;
 	if(year === undefined || month === undefined || day === undefined || hour === undefined) {
 		return res.status(400).json({ message: 'Missing parameters' });
 	}
+
+	if(hour > 23) return res.status(400).json({ message: 'Invalid hour' });
 
 	if(new Date(`${year}-${month}-${day} ${hour}:`) == 'Invalid Date') {
 		return res.status(400).json({ message: 'Invalid date' });
@@ -67,3 +67,5 @@ export function removeByID(req, res) {
 	// close the database connection
 	// db.close();
 }
+
+const db = new (sqlite3.verbose().Database)(DB_PATH);
