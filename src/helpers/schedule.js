@@ -109,6 +109,7 @@ export async function schedule(week=1, callback) { // week = 0 for this week, 1 
                                     await schedulePage.waitForNavigation();
                                 }
                                 
+                                let count = 0;
                                 hours.forEach(async ({ Year, Month, Day, Hour }) => {
                                     console.log(`${Year}/${Month}/${Day} ${Hour}:00`);
                                     try {
@@ -122,6 +123,8 @@ export async function schedule(week=1, callback) { // week = 0 for this week, 1 
                                         await schedulePage.click('#butProviderSchedule');
                                         // await sleep(1000);
                                         await schedulePage.waitForNavigation();
+
+                                        count++;
                                     } catch (err) {
                                         console.log(err);
                                     }
@@ -130,6 +133,8 @@ export async function schedule(week=1, callback) { // week = 0 for this week, 1 
                                 console.log(err);
                                 if (callback) callback(500, err.message);
                             }
+
+                            if(callback) callback(200, `Scheduled ${count} hours from ${hours.length}`);
                         }
                     }, 1000);
                 } catch (err) {
