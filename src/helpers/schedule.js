@@ -8,14 +8,13 @@ import {
     SCHEDULE_TIMEOUT,
     URL_SCHEDULE
 } from '../constants.js';
-import { elementExists } from './dom.js';
 import { getWeekBounds, getEasternTime } from './week.js';
 
 export default function setSchedule(app) {
-    const anticipation = 120000;
+    const anticipation = 120000; // Begin scheduling 2 minutes before the hour
 
     app.set(SCHEDULE_INTERVAL, setInterval(async () => {
-        const date = getEasternTime() + anticipation; // Begin scheduling 2 minutes before the hour
+        const date = new Date(getEasternTime() + anticipation);
         if (date.getHours() === app.get(HOUR_TO_SCHEDULE) && date.getDay() === app.get(DAY_TO_SCHEDULE)) {
             clearInterval(interval);
             app.set(SCHEDULE_INTERVAL, null);
