@@ -7,9 +7,10 @@ import indexRouter from './routes/index.routes.js';
 import usersRouter from './routes/user.routes.js';
 import hoursRouter from './routes/hour.routes.js';
 import weeksRouter from './routes/week.routes.js';
+import preferencesRouter from './routes/preference.routes.js';
 
 import setSchedule from './helpers/schedule.js';
-import { loadPreferences } from './helpers/preferences.js';
+import preferences from './helpers/preferences.js';
 import initDB from './initDB.js';
 
 // app setup
@@ -24,9 +25,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/user', usersRouter);
 app.use('/hours', hoursRouter);
-app.use('/weeks', weeksRouter);
+app.use('/week', weeksRouter);
+app.use('/preferences', preferencesRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -34,7 +36,7 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((req, res, next) => {
+app.use((_, res) => {
 	// set locals, only providing error in development
 	// res.locals.message = err.message;
 	// res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -44,6 +46,21 @@ app.use((req, res, next) => {
 	res.status(404).json({ message: 'Not found' });
 });
 
-initDB(() => loadPreferences(app, () => setSchedule(app)));
+initDB(err => {
+	console.log('Initializing database...');
+	if(err) {
+		console.log('ERROR: Database not initialized.');
+		return console.log(err);
+	}
+	console.log('Initializing preferences...');
+	preferences(err => {
+		if(err) {
+			console.log('ERROR: Couldn\'t read preferences.');
+			return console.log(err);
+		}
+		console.log('Programming schedule...');
+		setSchedule(app);
+	});
+});
 
 export default app;

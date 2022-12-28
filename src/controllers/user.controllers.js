@@ -5,12 +5,16 @@ const db = new (sqlite3.verbose().Database)(DB_PATH);
 
 export function get(req, res) {
 	db.serialize(() => {
-		db.all(`SELECT * FROM User`, (err, rows) => {
+		db.all(`SELECT * FROM User`, (err, users) => {
 			if (err) {
 				console.log(err);
 				return res.status(500).json({ message: err.message });
 			}
-			res.status(200).json({ user: rows.length ? rows[0] : null });
+			if(users.length !== 1) {
+				return res.status(404).json({ message: 'Found zero or more than one users' });
+			}
+			delete users[0]['Password'];
+			res.status(200).json(users[0]);
 		});
 	});
 

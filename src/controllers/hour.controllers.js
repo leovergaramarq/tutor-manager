@@ -14,12 +14,22 @@ export function add(req, res) {
 	}
 
 	db.serialize(() => {
-		db.run(`INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hour})`, err => {
+		db.all('SELECT * FROM Hour WHERE Year = ? AND Month = ? AND Day = ? AND Hour = ?', [year, month, day, hour], (err, rows) => {
 			if (err) {
 				console.log(err);
 				return res.status(500).json({ message: err.message });
 			}
-			res.status(201).json({ message: 'OK' })
+			if (rows.length) {
+				return res.status(400).json({ message: 'Hour already exists' });
+			}
+
+			db.run(`INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hour})`, err => {
+				if (err) {
+					console.log(err);
+					return res.status(500).json({ message: err.message });
+				}
+				res.status(201).json({ message: 'OK' })
+			});
 		});
 	});
 
