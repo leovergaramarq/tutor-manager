@@ -12,8 +12,11 @@ export default function initDB(callback) {
                 UNIQUE("Username")
             );
         `, err => {
-            if (err) console.log(err);
-            db.run(`
+            if (err) {
+                if (callback) return callback(err);
+                return console.error(err);
+            }
+            return db.run(`
                 CREATE TABLE IF NOT EXISTS "Hour" (
                     "HourID"	INTEGER NOT NULL UNIQUE,
                     "Year"	INTEGER NOT NULL,
@@ -23,16 +26,24 @@ export default function initDB(callback) {
                     PRIMARY KEY("HourID" AUTOINCREMENT)
                 );
             `, err => {
-                if (err) console.log(err);
-                db.run(`
-                    CREATE TABLE IF NOT EXISTS "Preference"(
+                if (err) {
+                    if (callback) return callback(err);
+                    return console.error(err);
+                }
+                return db.run(`
+                    CREATE TABLE IF NOT EXISTS "Preference" (
+                        "PreferenceID"	INTEGER NOT NULL UNIQUE,
                         "HourToSchedule"	INTEGER NOT NULL DEFAULT 12,
-                        "DayToSchedule"	INTEGER DEFAULT 6,
-                        "KeepLogin"	INTEGER DEFAULT 0
+                        "DayToSchedule"	INTEGER NOT NULL DEFAULT 6,
+                        "KeepLogin"	INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY("PreferenceID" AUTOINCREMENT)
                     );
                 `, err => {
-                    if(err) return console.log(err);
-                    if(callback) callback();
+                    if (err) {
+                        if (callback) return callback(err);
+                        return console.error(err);
+                    }
+                    if (callback) callback();
                 });
             });
         });

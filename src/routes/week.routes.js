@@ -4,7 +4,8 @@ import verifyToken from '../helpers/jwt.js';
 
 const router = Router();
 
-router.get('/:week', verifyToken, get);
+router.get('/', verifyToken, get);
+router.get('/:date', verifyToken, get);
 router.post('/schedule', verifyToken, schedule);
 
 export default router;
