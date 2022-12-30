@@ -1,44 +1,53 @@
 import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
-import { PUPPETEER_HEADLESS, SCHEDULE_ANTICIPATION, SHCEDULE_DELAY } from '../config.js';
-import {
-	DB_PATH,
-	SCHEDULE_INTERVAL,
-	SCHEDULE_TIMEOUT,
-	URL_SCHEDULE
-} from '../constants.js';
+import { PUPPETEER_HEADLESS, SCHEDULE_ANTICIPATION, SCHEDULE_DELAY } from '../config.js';
+import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
-import { getWeekBounds, getEasternTime } from './week.js';
+import { getWeekBounds, getEasternTime, getLocalTimeOffset } from './week.js';
 
-export default function setSchedule(app) {
+export default function setSchedule() {
 	console.log('Setting schedule...');
+	// console.log(new Date(), ' VS ', getEasternTime());
+
 	db.serialize(() => {
 		db.all('SELECT * FROM Preference', (err, rows) => {
 			if (err) {
 				return console.log('Could not load preferences from database. Using default values.');
 			}
-			let preferences;
-			if (!rows.length) {
-				console.log('No preferences found in database. Using default values.');
-				preferences = defPreferences();
+			const preferences = rows.length ? rows[0] : defPreferences();
+			console.log('Preferences', preferences);
+			const { HourToSchedule: hourToSchedule, DayToSchedule: dayToSchedule } = preferences;
+
+			const localDate = new Date();
+			const localDateSched = localDateToSchedule(localDate, dayToSchedule, hourToSchedule);
+			console.log('localDate', localDate);
+			console.log('localDateSched', localDateSched);
+
+			const hour = localDate.getHours();
+			const hourSched = localDateSched.getHours();
+
+			if (localDateSched >= localDate || (localDateSched < localDate && hour === hourSched)) {
+				if (timeoutSetSched) clearTimeout(timeoutSetSched);
+				timeoutSetSched = setTimeout(() => {
+					timeoutSetSched = null;
+
+					if (intervalWeekly) clearInterval(intervalWeekly);
+					intervalWeekly = setInterval(() => { //reset after 7 days
+						schedule(1, { hourToSchedule, dayToSchedule });
+					}, 604800000);
+
+					console.log(`Unwanted delay: ${(new Date() - localDate) / 1000}s`);
+					schedule(1, { hourToSchedule, dayToSchedule });
+				}, (localDateSched - localDate) - SCHEDULE_ANTICIPATION);
+				console.log(`Scheduling will take place within ${((localDateSched - localDate) - SCHEDULE_ANTICIPATION) / 3600000} hours.`);
+			} else if (hour > hourSched) {
+				if (timeoutResetSched) clearTimeout(timeoutResetSched);
+				timeoutResetSched = setTimeout(() => { //come back within one day
+					setSchedule();
+				}, 86400000);
 			} else {
-				preferences = rows[0];
+				console.log('This shouldn\'t happen');
 			}
-
-			const { HourToSchedule, DayToSchedule } = preferences;
-			const interval = setInterval(async () => {
-				const date = new Date(getEasternTime() + SCHEDULE_ANTICIPATION);
-				if (date.getHours() === HourToSchedule && date.getDay() === DayToSchedule) {
-					clearInterval(interval);
-
-					setTimeout(() => {
-						console.log('Resetting interval...');
-						setSchedule(app);
-					}, 3600000 + SCHEDULE_ANTICIPATION + 1); // why 1? idk
-
-					schedule(1, preferences);
-				}
-			}, 1000);
 		});
 	});
 }
@@ -59,7 +68,9 @@ export async function schedule(week = 1, preferences, callback) {
 			}
 
 			// get hours for the week
-			const [sunday, saturday] = getWeekBounds(getEasternTime(week ? new Date + 604800000 : new Date)); // 604800000 = 7 days in case week is 1
+			const [sunday, saturday] = getWeekBounds(getEasternTime(week ? new Date(new Date().getTime() + 604800000) : new Date())); // 604800000 = 7 days in case week is 1
+			console.log(sunday, '-->', saturday);
+			// TODO: ignore hours that have already passed on the current day
 			db.all(`
                 SELECT * FROM Hour
                 WHERE (Year = ${sunday.getFullYear()} OR Year = ${saturday.getFullYear()})
@@ -94,16 +105,18 @@ export async function schedule(week = 1, preferences, callback) {
 					}
 
 					if (preferences) { // wait for the hour to schedule
-						const { HourToSchedule, DayToSchedule } = preferences;
-						const interval = setInterval(async () => {
-							const date = new Date(getEasternTime() - SHCEDULE_DELAY);
-							if (date.getHours() === HourToSchedule && date.getDay() === DayToSchedule) {
-								clearInterval(interval);
-								await finishSchedule(page, browser, users, hours, week, callback);
-							}
-						}, 1000);
+						const { hourToSchedule, dayToSchedule } = preferences;
+						const localDate = new Date();
+						const localDateSched = localDateToSchedule(localDate, dayToSchedule, hourToSchedule);
+
+						if (timeoutFinishSched) clearTimeout(timeoutFinishSched);
+						timeoutFinishSched = setTimeout(() => {
+							timeoutFinishSched = null;
+							finishSchedule(page, browser, users, hours, week, callback);
+						}, (localDateSched - localDate) + SCHEDULE_DELAY);
+
 					} else { // schedule immediately
-						await finishSchedule(page, browser, users, hours, week, callback);
+						finishSchedule(page, browser, users, hours, week, callback);
 					}
 				} catch (err) {
 					console.log(err);
@@ -171,7 +184,7 @@ async function finishSchedule(page, browser, users, hours, week, callback) {
 				if (index === hours.length - 1) {
 					// await schedulePage.close();
 					// await browser.close();
-					console.log(`Scheduled ${count} hours from ${hours.length}`);
+					console.log(`Scheduled hours: ${count}/${hours.length}`);
 					if (callback) callback(200, `Scheduled ${count} hours from ${hours.length}`);
 				}
 			} catch (err) {
@@ -188,4 +201,23 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function localDateToSchedule(localDate, dayToSchedule, hourToSchedule) {
+	const localOffset = getLocalTimeOffset(localDate); //local hours offset from eastern time
+	console.log('localOffset', localOffset);
+
+	const day = localDate.getDate() + (dayToSchedule - localDate.getDay() + 7) % 7;
+	const hour = hourToSchedule + localOffset;
+	console.log('day', day, 'hour', hour);
+
+	const localDateSched = new Date(localDate);
+	localDateSched.setDate(day);
+	localDateSched.setHours(hour);
+	localDateSched.setMinutes(0);
+	localDateSched.setSeconds(0);
+	localDateSched.setMilliseconds(0);
+
+	return localDateSched;
+}
+
 const db = new (sqlite3.verbose().Database)(DB_PATH);
+let timeoutSetSched, timeoutResetSched, intervalWeekly, timeoutFinishSched;
