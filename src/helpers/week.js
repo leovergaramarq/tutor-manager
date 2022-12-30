@@ -1,10 +1,15 @@
 // function that gets the sunday and saturday of the week of a given date
 export function getWeekBounds(date = new Date()) {
     const day = date.getDay();
+    
     const sunday = new Date(date);
     sunday.setDate(date.getDate() - day);
+    sunday.setHours(0, 0, 0, 0);
+    
     const saturday = new Date(date);
     saturday.setDate(date.getDate() + (6 - day));
+    saturday.setHours(0, 0, 0, 0);
+    
     return [sunday, saturday];
 }
 

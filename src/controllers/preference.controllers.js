@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { DAY_TO_SCHEDULE, HOUR_TO_SCHEDULE, KEEP_LOGIN } from '../config.js';
 import { DB_PATH } from '../constants.js';
+import setSchedule from '../helpers/schedule.js';
 
 export function get(req, res) {
 	db.serialize(() => {
@@ -49,7 +50,7 @@ export function upsert(req, res) {
 						return res.status(500).json({ message: 'Internal server error' });
 					}
 					res.status(200).json({ message: 'Preference created' });
-					setS
+					setSchedule();
 				});
 			} else if (rows.length > 1) {
 				db.run('DELETE FROM Preference', err => {
@@ -66,6 +67,7 @@ export function upsert(req, res) {
 							return res.status(500).json({ message: 'Internal server error' });
 						}
 						res.status(200).json({ message: 'Preference created' });
+						setSchedule();
 					});
 				});
 			} else {
@@ -78,6 +80,7 @@ export function upsert(req, res) {
 						return res.status(500).json({ message: 'Internal server error' });
 					}
 					res.status(200).json({ message: 'Preference updated' });
+					setSchedule();
 				});
 			}
 		});
@@ -101,6 +104,7 @@ export function reset(req, res) {
 						return res.status(500).json({ message: 'Internal server error' });
 					}
 					res.status(200).json({ message: 'Preference created' });
+					setSchedule();
 				});
 			} else if (rows.length > 1) {
 				db.run('DELETE FROM Preference', err => {
@@ -114,6 +118,7 @@ export function reset(req, res) {
 							return res.status(500).json({ message: 'Internal server error' });
 						}
 						res.status(200).json({ message: 'Preference created' });
+						setSchedule();
 					});
 				});
 			} else {
@@ -123,6 +128,7 @@ export function reset(req, res) {
 						return res.status(500).json({ message: 'Internal server error' });
 					}
 					res.status(200).json({ message: 'Preference updated' });
+					setSchedule();
 				});
 			}
 		});
