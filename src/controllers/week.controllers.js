@@ -1,19 +1,19 @@
 import sqlite3 from 'sqlite3';
 import { DB_PATH } from '../constants.js';
-import { getEasternTime, getWeekBounds, weekMatrix } from '../helpers/week.js';
+import { getWeekBounds, weekMatrix } from '../helpers/week.js';
 import { schedule as sch } from '../helpers/schedule.js';
 
 export function get(req, res) {
 	let { date } = req.params;
 
 	if (!date) {
-		date = getEasternTime();
+		date = new Date();
 	} else {
 		date = new Date(date.replace(/-/g, '/'));
 		if (date == 'Invalid Date') {
 			return res.status(400).json({ message: 'Invalid date' });
 		} else {
-			date = getEasternTime(date);
+			date = new Date(date);
 		}
 	}
 	console.log(date);
@@ -47,13 +47,13 @@ export function clearWeek(req, res) {
 	let { date } = req.params;
 
 	if (!date) {
-		date = getEasternTime();
+		date = new Date();
 	} else {
 		date = new Date(date.replace(/-/g, '/'));
 		if (date == 'Invalid Date') {
 			return res.status(400).json({ message: 'Invalid date' });
 		} else {
-			date = getEasternTime(date);
+			date = new Date(date);
 		}
 	}
 	

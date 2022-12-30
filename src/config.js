@@ -18,5 +18,4 @@ export const SCHEDULE_DELAY = 1000; // schedule 1 second after the hour (to avoi
 
 export const PUPPETEER_HEADLESS = false;
 
-process.env.TZ = 'Asia/Calcutta';
-process.env.TC = 'Asia/Calcutta';
+process.env.TZ = 'America/New_York';
