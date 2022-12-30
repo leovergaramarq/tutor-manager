@@ -22,6 +22,15 @@ export function upsert(req, res) {
 	if (hourToSchedule === undefined && !dayToSchedule === undefined && keepLogin === undefined) {
 		return res.status(400).json({ message: 'Bad request' });
 	}
+	if(hourToSchedule !== undefined && (hourToSchedule < 0 || hourToSchedule > 23)) {
+		return res.status(400).json({ message: 'Invalid hour' });
+	}
+	if(dayToSchedule !== undefined && (dayToSchedule < 0 || dayToSchedule > 6)) {
+		return res.status(400).json({ message: 'Invalid day' });
+	}
+	if(keepLogin !== undefined && (keepLogin !== 0 && keepLogin !== 1)) {
+		return res.status(400).json({ message: 'Invalid keepLogin' });
+	}
 	delete req.body['PreferenceID'];
 
 	db.serialize(() => {
@@ -40,6 +49,7 @@ export function upsert(req, res) {
 						return res.status(500).json({ message: 'Internal server error' });
 					}
 					res.status(200).json({ message: 'Preference created' });
+					setS
 				});
 			} else if (rows.length > 1) {
 				db.run('DELETE FROM Preference', err => {

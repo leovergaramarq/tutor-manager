@@ -59,7 +59,7 @@ initDB(err => {
 			return console.log(err);
 		}
 		console.log('Programming schedule...');
-		setSchedule(app);
+		setSchedule();
 	});
 });
 

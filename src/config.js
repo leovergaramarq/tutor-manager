@@ -14,6 +14,9 @@ export const DAY_TO_SCHEDULE = 6;
 export const KEEP_LOGIN = 0;
 
 export const SCHEDULE_ANTICIPATION = 60000; // begin scrapping 1 minute before the hour
-export const SHCEDULE_DELAY = 1000; // schedule 1 second after the hour (to avoid scheduling conflicts)
+export const SCHEDULE_DELAY = 1000; // schedule 1 second after the hour (to avoid scheduling conflicts)
 
 export const PUPPETEER_HEADLESS = false;
+
+process.env.TZ = 'Asia/Calcutta';
+process.env.TC = 'Asia/Calcutta';
