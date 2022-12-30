@@ -1,12 +1,18 @@
 import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
-import { PUPPETEER_HEADLESS, SCHEDULE_ANTICIPATION, SCHEDULE_DELAY } from '../config.js';
 import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
 import { getWeekBounds } from './week.js';
+import {
+	DEADLINE_MINUTES_TO_SCHEDULE, PUPPETEER_HEADLESS, SCHEDULE_ANTICIPATION, SCHEDULE_DELAY
+} from '../config.js';
 
 export default function setSchedule() {
 	console.log('Setting schedule...');
+	clearInterval(intervalWeekly);
+	clearTimeout(timeoutSetSched);
+	clearTimeout(timeoutFinishSched);
+	
 	db.serialize(() => {
 		db.all('SELECT * FROM Preference', (err, rows) => {
 			if (err) {
@@ -18,41 +24,40 @@ export default function setSchedule() {
 
 			const date = new Date();
 			const dateSched = dateToSchedule(date, dayToSchedule, hourToSchedule);
-			console.log('localDate', date);
-			console.log('localDateSched', dateSched);
+			// console.log('localDate', date);
+			// console.log('localDateSched', dateSched);
 
-			const hour = date.getHours();
-			const hourSched = dateSched.getHours();
-
-			if (dateSched >= date || (dateSched < date && hour === hourSched)) {
-				if (timeoutSetSched) clearTimeout(timeoutSetSched);
-				timeoutSetSched = setTimeout(() => {
-					timeoutSetSched = null;
-
-					if (intervalWeekly) clearInterval(intervalWeekly);
-					intervalWeekly = setInterval(() => { //reset after 7 days
-						schedule(1, { hourToSchedule, dayToSchedule });
-					}, 604800000);
-
-					console.log(`Unwanted delay: ${(new Date() - date) / 1000}s`);
-					schedule(1, { hourToSchedule, dayToSchedule });
-				}, (dateSched - date) - SCHEDULE_ANTICIPATION);
-				console.log(`Scheduling will take place within ${((dateSched - date) - SCHEDULE_ANTICIPATION) / 3600000} hours.`);
-			} else if (hour > hourSched) {
-				if (timeoutResetSched) clearTimeout(timeoutResetSched);
-				timeoutResetSched = setTimeout(() => { //come back within one day
-					setSchedule();
-				}, 86400000);
-			} else {
-				console.log('This shouldn\'t happen');
+			if ((date - dateSched) / 60000 > DEADLINE_MINUTES_TO_SCHEDULE) { // if the hour to schedule is in the past, schedule for next week
+				dateSched.setDate(dateSched.getDate() + 7);
 			}
+
+			// clearTimeout(timeoutSetSched);
+			timeoutSetSched = setTimeout(() => {
+				timeoutSetSched = null;
+
+				// clearInterval(intervalWeekly);
+				intervalWeekly = setInterval(() => { //reset after 7 days
+					schedule(1, dateSched);
+				}, 604800000);
+
+				console.log(`Unwanted delay: ${(new Date() - date) / 1000}s`);
+				schedule(1, dateSched);
+			}, (dateSched - date) - SCHEDULE_ANTICIPATION);
+
+			const milisToSched = ((dateSched - date) - SCHEDULE_ANTICIPATION);
+			const days = milisToSched / 86400000;
+			const hours = (days - parseInt(days)) * 24;
+			const minutes = (hours - parseInt(hours)) * 60;
+			console.log(`Scheduling will take place within ${parseInt(days)} days, ${parseInt(hours)} hours, ${minutes.toFixed(2)} minutes.`);
 		});
 	});
 }
 
 // week = 0 for this week, 1 for next week
-export async function schedule(week = 1, preferences, callback) {
+export async function schedule(week = 1, dateSched, callback) {
 	console.log('Scheduling...');
+	clearTimeout(timeoutFinishSched);
+	
 	db.serialize(() => {
 		db.all('SELECT * FROM User', async (err, users) => {
 			if (err) {
@@ -65,19 +70,21 @@ export async function schedule(week = 1, preferences, callback) {
 				return;
 			}
 
-			// get hours for the week
-			const [sunday, saturday] = getWeekBounds(week ? new Date(new Date().getTime() + 604800000) : new Date()); // 604800000 = 7 days in case week is 1
-			// TODO: ignore hours that have already passed on the current day
-			db.all(`
-                SELECT * FROM Hour
-                WHERE (Year = ${sunday.getFullYear()} OR Year = ${saturday.getFullYear()})
-                AND (Month = ${sunday.getMonth() + 1} OR Month = ${saturday.getMonth() + 1})
-                AND Day >= ${sunday.getDate()} AND Day <= ${saturday.getDate()}
-            `, async (err, hours) => {
+			db.all('SELECT * FROM Hour', async (err, hours) => {
 				if (err) {
 					console.log(err);
 					return res.status(500).json({ message: err.message });
 				}
+				// get hours for the week
+				const [sunday, saturday] = getWeekBounds(week ? new Date(new Date().getTime() + 604800000) : new Date()); // 604800000 = 7 days in case week is 1
+				const now = new Date();
+
+				// filter hours
+				hours = hours.filter(({ Year, Month, Day, Hour }) => {
+					const hourToSched = new Date(`${Year}/${Month}/${Day} ${Hour}:00`);
+					return hourToSched >= sunday && hourToSched <= saturday && hourToSched >= now;
+				});
+
 				if (!hours.length) {
 					if (callback) callback(204, 'No hours found.');
 					return;
@@ -101,12 +108,10 @@ export async function schedule(week = 1, preferences, callback) {
 						// await page.waitForNavigation();
 					}
 
-					if (preferences) { // wait for the hour to schedule
-						const { hourToSchedule, dayToSchedule } = preferences;
+					if (dateSched) { // wait for the hour to schedule
 						const date = new Date();
-						const dateSched = dateToSchedule(date, dayToSchedule, hourToSchedule);
 
-						if (timeoutFinishSched) clearTimeout(timeoutFinishSched);
+						// clearTimeout(timeoutFinishSched);
 						timeoutFinishSched = setTimeout(() => {
 							timeoutFinishSched = null;
 							finishSchedule(page, browser, users, hours, week, callback);
@@ -167,7 +172,7 @@ async function finishSchedule(page, browser, users, hours, week, callback) {
 				const unavailable = await schedulePage.evaluate(() => (
 					document.querySelector('#butProviderSchedule').disabled
 				));
-				console.log(`${Year}/${Month}/${Day} ${Hour}:00 - ${unavailable ? 'unavailable' : 'available'}}`);
+				console.log(`${Year}/${Month}/${Day} ${Hour}:00 - ${unavailable ? 'unavailable' : 'available'}`);
 				if (!unavailable) {
 					await schedulePage.click('#butProviderSchedule');
 					await sleep(1000);
@@ -198,17 +203,29 @@ function sleep(ms) {
 function dateToSchedule(date, dayToSchedule, hourToSchedule) {
 	const day = date.getDate() + (dayToSchedule - date.getDay() + 7) % 7;
 	const hour = hourToSchedule;
-	console.log('day', day, 'hour', hour);
 
 	const dateSched = new Date(date);
 	dateSched.setDate(day);
-	dateSched.setHours(hour);
-	dateSched.setMinutes(0);
-	dateSched.setSeconds(0);
-	dateSched.setMilliseconds(0);
+	dateSched.setHours(hour, 0, 0, 0);
 
 	return dateSched;
 }
 
+function clearInterval(interval) {
+	if (interval) {
+		console.log('Clearing interval', interval);
+		global.clearInterval(interval);
+		interval = null;
+	}
+}
+
+function clearTimeout(timeout) {
+	if (timeout) {
+		console.log('Clearing timeout', timeout);
+		global.clearTimeout(timeout);
+		timeout = null;
+	}
+}
+
 const db = new (sqlite3.verbose().Database)(DB_PATH);
-let timeoutSetSched, timeoutResetSched, intervalWeekly, timeoutFinishSched;
+let timeoutSetSched, intervalWeekly, timeoutFinishSched;
