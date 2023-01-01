@@ -2,11 +2,11 @@ import { config } from 'dotenv';
 
 config();
 
-export const PORT = process.env.PORT || 3000;
-export const NODE_ENV = process.env.NODE_ENV || 'development';
+// env variables
+export const PORT = process.env.PORT || 5000;
+export const JWT_SECRET = process.env.JWT_SECRET || 'bey';
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-
+// constants
 export const JWT_EXPIRY_TIME = '24h';
 
 export const HOUR_TO_SCHEDULE = 12;
