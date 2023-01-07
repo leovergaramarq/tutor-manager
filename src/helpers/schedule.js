@@ -158,8 +158,7 @@ async function finishSchedule(page, browser, users, hours, week, callback) {
 
 		await schedulePage.waitForSelector('#lblAvailableHours'); // wait for the page to load
 
-		// const count = await scheduleAdding(schedulePage, hours);
-		const count = await scheduleByDiscarding(schedulePage, hours);
+		const count = await scheduleByArea(schedulePage, hours);
 
 		console.log(`Scheduled ${count}/${hours.length} hours.`);
 		if (callback) callback(200, `Scheduled ${count}/${hours.length} hours.`);
@@ -206,7 +205,7 @@ async function scheduleByAdding(schedulePage, hours) {
 	return count;
 }
 
-async function scheduleByDiscarding(schedulePage, hours) {
+async function scheduleByArea(schedulePage, hours) {
 	const hoursAvailable = await schedulePage.evaluate(() => (
 		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
 	));

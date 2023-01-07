@@ -1,7 +1,5 @@
-import jwt from 'jsonwebtoken';
 import sqlite3 from 'sqlite3';
 
-import { JWT_SECRET, JWT_EXPIRY_TIME } from '../config.js'
 import { DB_PATH } from '../constants.js';
 
 export function hello(_, res) {
@@ -30,10 +28,6 @@ export function login(req, res) {
 				return res.status(500).json({ message: err.message });
 			}
 
-			const tokenRes = () => ({
-				token: jwt.sign({ username }, JWT_SECRET, { expiresIn: JWT_EXPIRY_TIME })
-			});
-
 			if (!users.length) {
 				console.log('no rows');
 				db.run(`INSERT INTO User (Username, Password) VALUES (?, ?)`, [username, password], err => {
@@ -41,7 +35,7 @@ export function login(req, res) {
 						console.log(err);
 						return res.status(500).json({ message: err.message });
 					}
-					res.status(201).json(tokenRes());
+					res.status(201).json({ message: 'Logged in successfully'});
 				});
 			} else if (users.length > 1) {
 				console.log('more than one row');
@@ -55,7 +49,7 @@ export function login(req, res) {
 							console.log(err);
 							return res.status(500).json({ message: err.message });
 						}
-						res.status(201).json(tokenRes());
+						res.status(201).json({ message: 'Logged in successfully'});
 					});
 				});
 			} else {
@@ -67,12 +61,12 @@ export function login(req, res) {
 							console.log(err);
 							return res.status(500).json({ message: err.message });
 						}
-						res.status(201).json(tokenRes());
+						res.status(201).json({ message: 'Logged in successfully'});
 					});
 					console.log(asd);
 				} else {
 					console.log('username and password match');
-					return res.status(201).json(tokenRes());
+					return res.status(201).json({ message: 'Logged in successfully'});
 				}
 			}
 		});

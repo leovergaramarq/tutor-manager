@@ -3,12 +3,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import createError from 'http-errors';
 
-import indexRouter from './routes/index.routes.js';
-import usersRouter from './routes/user.routes.js';
-import hoursRouter from './routes/hour.routes.js';
-import weeksRouter from './routes/week.routes.js';
-import preferencesRouter from './routes/preference.routes.js';
-
+import router from './routes/index.routes.js';
 import setSchedule from './helpers/schedule.js';
 import preferences from './helpers/preferences.js';
 import initDB from './initDB.js';
@@ -24,11 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // routes
-app.use('/', indexRouter);
-app.use('/user', usersRouter);
-app.use('/hours', hoursRouter);
-app.use('/week', weeksRouter);
-app.use('/preferences', preferencesRouter);
+app.use('/api', router);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
@@ -37,12 +28,6 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((_, res) => {
-	// set locals, only providing error in development
-	// res.locals.message = err.message;
-	// res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-	// render the error page
-	// res.status(err.status || 500);
 	res.status(404).json({ message: 'Not found' });
 });
 
