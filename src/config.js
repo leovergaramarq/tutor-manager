@@ -4,10 +4,6 @@ config();
 
 // env variables
 export const PORT = process.env.PORT || 5000;
-export const JWT_SECRET = process.env.JWT_SECRET || 'bey';
-
-// constants
-export const JWT_EXPIRY_TIME = '24h';
 
 export const HOUR_TO_SCHEDULE = 12;
 export const DAY_TO_SCHEDULE = 6;
