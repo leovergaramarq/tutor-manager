@@ -86,7 +86,7 @@ export function schedule(req, res) {
 				return res.status(400).json({ message: 'No preferences found' });
 			}
 
-			const { ScheduleDelay, ScheduleMethod, SchedulePreferredHours } = rows[0];
+			const { ScheduleMethod, SchedulePreferredHours } = rows[0];
 
 			sch(
 				week === 0 ? week : 1,
