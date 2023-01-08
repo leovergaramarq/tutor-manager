@@ -6,7 +6,7 @@ import createError from 'http-errors';
 import router from './routes/index.routes.js';
 import setSchedule from './helpers/schedule.js';
 import preferences from './helpers/preferences.js';
-import initDB from './initDB.js';
+import initDB from './helpers/initDB.js';
 
 // app setup
 

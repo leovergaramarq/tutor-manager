@@ -1,5 +1,5 @@
 import sqlite3 from 'sqlite3';
-import { DB_PATH } from './constants.js';
+import { DB_PATH } from '../constants.js';
 
 export default function initDB(callback) {
     db.serialize(() => {
@@ -35,7 +35,10 @@ export default function initDB(callback) {
                         "PreferenceID"	INTEGER NOT NULL UNIQUE,
                         "HourToSchedule"	INTEGER NOT NULL DEFAULT 12,
                         "DayToSchedule"	INTEGER NOT NULL DEFAULT 6,
-                        "KeepLogin"	INTEGER NOT NULL DEFAULT 0,
+                        "ScheduleAncitipation"	INTEGER NOT NULL DEFAULT 60000,
+                        "ScheduleDelay"	INTEGER NOT NULL DEFAULT 1000,
+                        "ScheduleMethod"	INTEGER NOT NULL DEFAULT 0,
+                        "SchedulePreferredHours"	INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY("PreferenceID" AUTOINCREMENT)
                     );
                 `, err => {
@@ -43,7 +46,20 @@ export default function initDB(callback) {
                         if (callback) return callback(err);
                         return console.error(err);
                     }
-                    if (callback) callback();
+                    return db.run(`
+                        CREATE TABLE IF NOT EXISTS "PreferredHour" (
+                            "PreferredHourID"	INTEGER NOT NULL UNIQUE,
+                            "Day"	INTEGER NOT NULL,
+                            "Hour"	INTEGER NOT NULL,
+                            PRIMARY KEY("PreferredHourID" AUTOINCREMENT)
+                        );
+                    `, err => {
+                        if (err) {
+                            if (callback) return callback(err);
+                            return console.error(err);
+                        }
+                        if (callback) callback();
+                    });
                 });
             });
         });

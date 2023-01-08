@@ -17,7 +17,4 @@ export function get(req, res) {
 			res.status(200).json(users[0]);
 		});
 	});
-
-	// close the database connection
-	// db.close();
 }
