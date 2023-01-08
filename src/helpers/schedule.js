@@ -4,7 +4,7 @@ import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
 import { getWeekBounds } from './week.js';
 import {
-	DEADLINE_MINUTES_TO_SCHEDULE, PUPPETEER_HEADLESS, SCHEDULE_ANTICIPATION, SCHEDULE_DELAY
+	DEADLINE_MINUTES_TO_SCHEDULE, PUPPETEER_HEADLESS,
 } from '../config.js';
 
 export default function setSchedule() {
@@ -20,7 +20,14 @@ export default function setSchedule() {
 			}
 			const preferences = rows.length ? rows[0] : defPreferences();
 			console.log('Preferences', preferences);
-			const { HourToSchedule: hourToSchedule, DayToSchedule: dayToSchedule } = preferences;
+			const {
+				HourToSchedule: hourToSchedule,
+				DayToSchedule: dayToSchedule,
+				ScheduleAnticipation: scheduleAnticipation,
+				ScheduleDelay: scheduleDelay,
+				ScheduleMethod: scheduleMethod,
+				SchedulePreferredHours: schedulePreferredHours,
+			} = preferences;
 
 			const date = new Date();
 			const dateSched = dateToSchedule(date, dayToSchedule, hourToSchedule);
@@ -35,14 +42,14 @@ export default function setSchedule() {
 
 				// clearInterval(intervalWeekly);
 				intervalWeekly = setInterval(() => { //reset after 7 days
-					schedule(1, dateSched);
+					schedule(1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours);
 				}, 604800000);
 
 				console.log(`Unwanted delay: ${(new Date() - date) / 1000}s`);
-				schedule(1, dateSched);
-			}, (dateSched - date) - SCHEDULE_ANTICIPATION);
+				schedule(1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours);
+			}, (dateSched - date) - scheduleAnticipation);
 
-			const milisToSched = ((dateSched - date) - SCHEDULE_ANTICIPATION);
+			const milisToSched = ((dateSched - date) - scheduleAnticipation);
 			const days = milisToSched / 86400000;
 			const hours = (days - parseInt(days)) * 24;
 			const minutes = (hours - parseInt(hours)) * 60;
@@ -52,7 +59,7 @@ export default function setSchedule() {
 }
 
 // week = 0 for this week, 1 for next week
-export async function schedule(week = 1, dateSched, callback) {
+export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours, callback) {
 	console.log('Scheduling...');
 	clearTimeout(timeoutFinishSched);
 
@@ -68,7 +75,7 @@ export async function schedule(week = 1, dateSched, callback) {
 				return;
 			}
 
-			db.all('SELECT * FROM Hour', async (err, hours) => {
+			db.all(schedulePreferredHours ? 'SELECT * FROM PreferredHour' : 'SELECT * FROM Hour' , async (err, hours) => {
 				if (err) {
 					console.log(err);
 					return res.status(500).json({ message: err.message });
@@ -77,11 +84,20 @@ export async function schedule(week = 1, dateSched, callback) {
 				const [sunday, saturday] = getWeekBounds(week ? new Date(new Date().getTime() + 604800000) : new Date()); // 604800000 = 7 days in case week is 1
 				const now = new Date();
 
-				// filter hours
-				hours = hours.filter(({ Year, Month, Day, Hour }) => {
-					const hourToSched = new Date(`${Year}/${Month}/${Day} ${Hour}:00`);
-					return hourToSched >= sunday && hourToSched <= saturday && hourToSched >= now;
-				});
+				// filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
+				if(schedulePreferredHours === 0) {
+					hours = hours.filter(({ Year, Month, Day, Hour }) => {
+						const hourToSched = new Date(`${Year}/${Month}/${Day} ${Hour}:00`);
+						return hourToSched >= sunday && hourToSched <= saturday && hourToSched >= now;
+					});
+				} else { // filter hours greater than now if schedulePreferredHours is true (using table PreferredHour)
+					hours = hours.filter(({ Day, Hour }) => {
+						const nowDayOfWeek = now.getDay();
+						if (Day > nowDayOfWeek) return true;
+						if (Day < nowDayOfWeek) return false;
+						return Hour > now.getHours();
+					});
+				}
 
 				if (!hours.length) {
 					if (callback) callback(204, 'No hours found.');
@@ -106,17 +122,19 @@ export async function schedule(week = 1, dateSched, callback) {
 						// await page.waitForNavigation();
 					}
 
+					if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
+
 					if (dateSched) { // wait for the hour to schedule
 						const date = new Date();
 
 						// clearTimeout(timeoutFinishSched);
 						timeoutFinishSched = setTimeout(() => {
 							timeoutFinishSched = null;
-							finishSchedule(page, browser, users, hours, week, callback);
-						}, (dateSched - date) + SCHEDULE_DELAY);
+							finishSchedule(page, browser, users, hours, week, scheduleMethod);
+						}, (dateSched - date) + scheduleDelay);
 
 					} else { // schedule immediately
-						finishSchedule(page, browser, users, hours, week, callback);
+						finishSchedule(page, browser, users, hours, week, scheduleMethod);
 					}
 				} catch (err) {
 					console.log(err);
@@ -127,7 +145,7 @@ export async function schedule(week = 1, dateSched, callback) {
 	});
 }
 
-async function finishSchedule(page, browser, users, hours, week, callback) {
+async function finishSchedule(page, browser, users, hours, week, scheduleMethod) {
 	try {
 		await page.click('.ScheduleManagerLink');
 		const target = await browser.waitForTarget(target => target.opener() === page.target());
@@ -154,17 +172,17 @@ async function finishSchedule(page, browser, users, hours, week, callback) {
 			await sleep(1000);
 		}
 
-		// if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
-
 		await schedulePage.waitForSelector('#lblAvailableHours'); // wait for the page to load
 
-		const count = await scheduleByArea(schedulePage, hours);
+		if(scheduleMethod === 0) { // schedule by adding
+			await scheduleByAdding(schedulePage, hours);
+		} else { // = 1, schedule by area
+			await scheduleByArea(schedulePage, hours);
+		}
 
 		console.log(`Scheduled ${count}/${hours.length} hours.`);
-		if (callback) callback(200, `Scheduled ${count}/${hours.length} hours.`);
 	} catch (err) {
 		console.log(err);
-		if (callback) callback(500, err.message);
 	}
 }
 
@@ -179,7 +197,7 @@ async function scheduleByAdding(schedulePage, hours) {
 		try {
 			const { Year, Month, Day, Hour } = hours[i];
 
-			const dayOfWeek = new Date(`${Year}/${Month}/${Day}`).getDay();
+			const dayOfWeek = Year ? new Date(`${Year}/${Month}/${Day}`).getDay() : Day; // if !Year then using table PreferredHour (Day is the day of week)
 
 			const sel = `#cell${dayOfWeek + 7 * Hour}`;
 			await schedulePage.waitForSelector(sel);
@@ -187,7 +205,7 @@ async function scheduleByAdding(schedulePage, hours) {
 				el.classList.contains('ui-selecting-finished-OPERATING')
 			));
 
-			console.log(`${Year}/${Month}/${Day} ${Hour}:00 - ${available ? 'available' : 'unavailable'}`);
+			console.log(`${dayOfWeek} ${Hour}:00 - available: ${available}`);
 			if (available) {
 				await schedulePage.click(sel);
 				await schedulePage.click('#butProviderSchedule');
@@ -244,9 +262,14 @@ async function scheduleByArea(schedulePage, hours) {
 						el.classList.contains('ui-selecting-finished-FILLED')
 					));
 					if (filled) {
-						const hourWanted = hours.find(({ Year, Month, Day, Hour }) => (
-							new Date(`${Year}/${Month}/${Day}`).getDay() === dayOfWeek && Hour === parseInt(i / 7)
-						));
+						const hourWanted = hours.find(({ Year, Month, Day, Hour }) => {
+							if (Year) { // using table Hour
+								const date = new Date(`${Year}/${Month}/${Day}`);
+								return date.getDay() === dayOfWeek && Hour === parseInt(i / 7);
+							} else {
+								return Day === dayOfWeek && Hour === parseInt(i / 7);
+							}
+						});
 						if (!hourWanted) {
 							await schedulePage.click(`#cell${i}`);
 							await schedulePage.click('#butProviderUnschedule');
@@ -267,8 +290,7 @@ async function scheduleByArea(schedulePage, hours) {
 
 	if (count < hours.length) {
 		// 3. schedule the missing hours
-		const countMissing = await scheduleByAdding(schedulePage, hours.filter(hour => !hour.scheduled));
-		count += countMissing;
+		count += await scheduleByAdding(schedulePage, hours.filter(hour => !hour.scheduled));
 	}
 
 	return count;

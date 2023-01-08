@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { add, remove, removeByID } from '../controllers/hour.controllers.js';
+import { add, remove } from '../controllers/hour.controllers.js';
 
 const router = Router();
 
 router.post('/', add);
-router.delete('/', remove);
-router.delete('/:id', removeByID);
+router.delete('/:id', remove);
 
 export default router;

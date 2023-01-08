@@ -38,9 +38,6 @@ export function get(req, res) {
 			res.status(200).json(week);
 		});
 	});
-
-	// close the database connection
-	// db.close();
 }
 
 export function clearWeek(req, res) {
@@ -56,10 +53,10 @@ export function clearWeek(req, res) {
 			date = new Date(date);
 		}
 	}
-	
+
 	const [sunday, saturday] = getWeekBounds(date);
 	console.log(sunday, saturday);
-	
+
 	db.serialize(() => {
 		db.run(`
 			DELETE FROM Hour
@@ -67,7 +64,7 @@ export function clearWeek(req, res) {
 			AND (Month = ${sunday.getMonth() + 1} OR Month = ${saturday.getMonth() + 1})
 			AND Day >= ${sunday.getDate()} AND Day <= ${saturday.getDate()}
 		`, err => {
-			if(err) {
+			if (err) {
 				console.log(err);
 				return res.status(500).json({ message: err.message });
 			}
@@ -78,7 +75,29 @@ export function clearWeek(req, res) {
 
 export function schedule(req, res) {
 	const { week } = req.body; // if week=0 is provided, schedule the current week; otherwise, schedule the next week
-	sch(week === 0 ? week : 1, null, (status, message) => res.status(status).json({ message }));
+	db.serialize(() => {
+		db.all('SELECT * FROM Preference', (err, rows) => {
+			if (err) {
+				console.log(err);
+				return res.status(500).json({ message: err.message });
+			}
+
+			if (!rows.length) {
+				return res.status(400).json({ message: 'No preferences found' });
+			}
+
+			const { ScheduleDelay, ScheduleMethod, SchedulePreferredHours } = rows[0];
+
+			sch(
+				week === 0 ? week : 1,
+				null,
+				null,
+				ScheduleMethod,
+				SchedulePreferredHours,
+				(status, message) => res.status(status).json({ message })
+			);
+		});
+	});
 }
 
 const db = new (sqlite3.verbose().Database)(DB_PATH);

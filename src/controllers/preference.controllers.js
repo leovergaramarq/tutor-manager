@@ -1,7 +1,14 @@
 import sqlite3 from 'sqlite3';
-import { DAY_TO_SCHEDULE, HOUR_TO_SCHEDULE, KEEP_LOGIN } from '../config.js';
-import { DB_PATH } from '../constants.js';
 import setSchedule from '../helpers/schedule.js';
+import { DB_PATH } from '../constants.js';
+import {
+	DAY_TO_SCHEDULE,
+	HOUR_TO_SCHEDULE,
+	SCHEDULE_ANTICIPATION,
+	SCHEDULE_DELAY,
+	SCHEDULE_METHOD,
+	SCHEDULE_PREFERRED_HOURS,
+} from '../config.js';
 
 export function get(req, res) {
 	db.serialize(() => {
@@ -19,19 +26,27 @@ export function get(req, res) {
 }
 
 export function upsert(req, res) {
-	let { hourToSchedule, dayToSchedule, keepLogin } = req.body;
-	if (hourToSchedule === undefined && !dayToSchedule === undefined && keepLogin === undefined) {
+	let {
+		hourToSchedule,
+		dayToSchedule,
+		scheduleAnticipation,
+		scheduleDelay,
+		scheduleMethod,
+		schedulePreferredHours,
+	} = req.body;
+
+	if (hourToSchedule === undefined && !dayToSchedule === undefined && scheduleAnticipation === undefined && scheduleDelay === undefined && scheduleMethod === undefined && schedulePreferredHours === undefined) {
 		return res.status(400).json({ message: 'Bad request' });
 	}
-	if(hourToSchedule !== undefined && (hourToSchedule < 0 || hourToSchedule > 23)) {
+
+	if (hourToSchedule !== undefined && (hourToSchedule < 0 || hourToSchedule > 23)) {
 		return res.status(400).json({ message: 'Invalid hour' });
 	}
-	if(dayToSchedule !== undefined && (dayToSchedule < 0 || dayToSchedule > 6)) {
+
+	if (dayToSchedule !== undefined && (dayToSchedule < 0 || dayToSchedule > 6)) {
 		return res.status(400).json({ message: 'Invalid day' });
 	}
-	if(keepLogin !== undefined && (keepLogin !== 0 && keepLogin !== 1)) {
-		return res.status(400).json({ message: 'Invalid keepLogin' });
-	}
+
 	delete req.body['PreferenceID'];
 
 	db.serialize(() => {
@@ -43,8 +58,12 @@ export function upsert(req, res) {
 			if (!rows.length) {
 				if (hourToSchedule === undefined) hourToSchedule = HOUR_TO_SCHEDULE;
 				if (dayToSchedule === undefined) dayToSchedule = DAY_TO_SCHEDULE;
-				if (keepLogin === undefined) keepLogin = KEEP_LOGIN;
-				db.run('INSERT INTO Preference (HourToSchedule, DayToSchedule, KeepLogin) VALUES (?, ?, ?)', [hourToSchedule, dayToSchedule, keepLogin], err => {
+				if (scheduleAnticipation === undefined) scheduleAnticipation = SCHEDULE_ANTICIPATION;
+				if (scheduleDelay === undefined) scheduleDelay = SCHEDULE_DELAY;
+				if (scheduleMethod === undefined) scheduleMethod = SCHEDULE_METHOD;
+				if (schedulePreferredHours === undefined) schedulePreferredHours = SCHEDULE_PREFERRED_HOURS;
+
+				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours})`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -60,8 +79,12 @@ export function upsert(req, res) {
 					}
 					if (hourToSchedule === undefined) hourToSchedule = HOUR_TO_SCHEDULE;
 					if (dayToSchedule === undefined) dayToSchedule = DAY_TO_SCHEDULE;
-					if (keepLogin === undefined) keepLogin = KEEP_LOGIN;
-					db.run('INSERT INTO Preference (HourToSchedule, DayToSchedule, KeepLogin) VALUES (?, ?, ?)', [hourToSchedule, dayToSchedule, keepLogin], err => {
+					if (scheduleAnticipation === undefined) scheduleAnticipation = SCHEDULE_ANTICIPATION;
+					if (scheduleDelay === undefined) scheduleDelay = SCHEDULE_DELAY;
+					if (scheduleMethod === undefined) scheduleMethod = SCHEDULE_METHOD;
+					if (schedulePreferredHours === undefined) schedulePreferredHours = SCHEDULE_PREFERRED_HOURS;
+
+					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours})`, err => {
 						if (err) {
 							console.log(err);
 							return res.status(500).json({ message: 'Internal server error' });
@@ -71,10 +94,14 @@ export function upsert(req, res) {
 					});
 				});
 			} else {
-				if(hourToSchedule === undefined) hourToSchedule = rows[0].HourToSchedule;
-				if(dayToSchedule === undefined) dayToSchedule = rows[0].DayToSchedule;
-				if(keepLogin === undefined) keepLogin = rows[0].KeepLogin;
-				db.run('UPDATE Preference SET HourToSchedule = ?, DayToSchedule = ?, KeepLogin = ?', [hourToSchedule, dayToSchedule, keepLogin], err => {
+				if (hourToSchedule === undefined) hourToSchedule = rows[0].HourToSchedule;
+				if (dayToSchedule === undefined) dayToSchedule = rows[0].DayToSchedule;
+				if (scheduleAnticipation === undefined) scheduleAnticipation = rows[0].ScheduleAnticipation;
+				if (scheduleDelay === undefined) scheduleDelay = rows[0].ScheduleDelay;
+				if (scheduleMethod === undefined) scheduleMethod = rows[0].ScheduleMethod;
+				if (schedulePreferredHours === undefined) schedulePreferredHours = rows[0].SchedulePreferredHours;
+
+				db.run(`UPDATE Preference SET HourToSchedule = ${hourToSchedule}, DayToSchedule = ${dayToSchedule}, ScheduleAnticipation = ${scheduleAnticipation}, ScheduleDelay = ${scheduleDelay}, ScheduleMethod = ${scheduleMethod}, SchedulePreferredHours = ${schedulePreferredHours}`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -85,9 +112,6 @@ export function upsert(req, res) {
 			}
 		});
 	});
-
-	// close the database connection
-	// db.close();
 }
 
 export function reset(req, res) {
@@ -98,7 +122,7 @@ export function reset(req, res) {
 				return res.status(500).json({ message: 'Internal server error' });
 			}
 			if (!rows.length) {
-				db.run('INSERT INTO Preference (HourToSchedule, DayToSchedule, KeepLogin) VALUES (?, ?, ?)', [HOUR_TO_SCHEDULE, DAY_TO_SCHEDULE, KEEP_LOGIN], err => {
+				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS})`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -112,7 +136,7 @@ export function reset(req, res) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
 					}
-					db.run('INSERT INTO Preference (HourToSchedule, DayToSchedule, KeepLogin) VALUES (?, ?, ?)', [HOUR_TO_SCHEDULE, DAY_TO_SCHEDULE, KEEP_LOGIN], err => {
+					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS})`, err => {
 						if (err) {
 							console.log(err);
 							return res.status(500).json({ message: 'Internal server error' });
@@ -122,7 +146,7 @@ export function reset(req, res) {
 					});
 				});
 			} else {
-				db.run('UPDATE Preference SET HourToSchedule = ?, DayToSchedule = ?, KeepLogin = ?', [HOUR_TO_SCHEDULE, DAY_TO_SCHEDULE, KEEP_LOGIN], err => {
+				db.run(`UPDATE Preference SET HourToSchedule = ${HOUR_TO_SCHEDULE}, DayToSchedule = ${DAY_TO_SCHEDULE}, ScheduleAnticipation = ${SCHEDULE_ANTICIPATION}, ScheduleDelay = ${SCHEDULE_DELAY}, ScheduleMethod = ${SCHEDULE_METHOD}, SchedulePreferredHours = ${SCHEDULE_PREFERRED_HOURS}`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -133,9 +157,6 @@ export function reset(req, res) {
 			}
 		});
 	});
-
-	// close the database connection
-	// db.close();
 }
 
 const db = new (sqlite3.verbose().Database)(DB_PATH);
