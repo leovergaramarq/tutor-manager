@@ -35,7 +35,7 @@ export default function initDB(callback) {
                         "PreferenceID"	INTEGER NOT NULL UNIQUE,
                         "HourToSchedule"	INTEGER NOT NULL DEFAULT 12,
                         "DayToSchedule"	INTEGER NOT NULL DEFAULT 6,
-                        "ScheduleAncitipation"	INTEGER NOT NULL DEFAULT 60000,
+                        "ScheduleAnticipation"	INTEGER NOT NULL DEFAULT 60000,
                         "ScheduleDelay"	INTEGER NOT NULL DEFAULT 1000,
                         "ScheduleMethod"	INTEGER NOT NULL DEFAULT 0,
                         "SchedulePreferredHours"	INTEGER NOT NULL DEFAULT 0,

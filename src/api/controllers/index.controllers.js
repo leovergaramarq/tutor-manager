@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
 
-import { DB_PATH } from '../constants.js';
+import { DB_PATH } from '../../constants.js';
 
 export function hello(_, res) {
 	db.serialize(() => {

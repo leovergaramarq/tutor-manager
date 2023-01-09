@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
-import { DB_PATH } from '../constants.js';
-import { getWeekBounds } from '../helpers/week.js';
+import { DB_PATH } from '../../constants.js';
+import { getWeekBounds } from '../../helpers/week.js';
 
 export function add(req, res) {
 	const { week } = req.body;
@@ -58,7 +58,6 @@ export function add(req, res) {
 						db.all(`SELECT * FROM Hour WHERE Year = ${date.getFullYear()} AND Month = ${date.getMonth() + 1} AND Day = ${date.getDate()} AND Hour = ${date.getHours()}`, (err, rows) => {
 							if (err) {
 								console.log(err);
-								return;
 							}
 							if (rows.length) { // hour already exists
 								count++;
@@ -67,7 +66,6 @@ export function add(req, res) {
 								db.run(`INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${date.getFullYear()}, ${date.getMonth() + 1}, ${date.getDate()}, ${date.getHours()})`, err => {
 									if (err) {
 										console.log(err);
-										return res.status(500).json({ message: err.message });
 									}
 									count++;
 									if (count === 168) res.status(201).json({ message: 'OK' });
