@@ -20,6 +20,7 @@ main {
     padding: 20px;
     color: var(--primary-color);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+    /* transition: all 1s ease; */
 }
 
 h1 {

@@ -4,12 +4,13 @@ import hour from './hour.routes.js';
 import week from './week.routes.js';
 import preference from './preference.routes.js';
 import preferredHour from './preferredHour.routes.js';
-import { hello, login } from '../controllers/index.controllers.js';
+import { hello, login, logout } from '../controllers/index.controllers.js';
 
 const router = Router();
 
 router.get('/', hello);
 router.post('/login', login);
+router.post('/logout', logout);
 
 router.use('/user', user);
 router.use('/hours', hour);
