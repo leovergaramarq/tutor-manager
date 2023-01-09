@@ -1,7 +1,7 @@
 import sqlite3 from 'sqlite3';
-import { DB_PATH } from '../constants.js';
-import { getWeekBounds, weekMatrix } from '../helpers/week.js';
-import { schedule as sch } from '../helpers/schedule.js';
+import { DB_PATH } from '../../constants.js';
+import { getWeekBounds, weekMatrix } from '../../helpers/week.js';
+import { schedule as sch } from '../../helpers/schedule.js';
 
 export function get(req, res) {
 	let { date } = req.params;

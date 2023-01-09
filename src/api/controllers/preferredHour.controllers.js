@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
-import { DB_PATH } from '../constants.js';
-import { weekMatrix } from '../helpers/week.js';
+import { DB_PATH } from '../../constants.js';
+import { weekMatrix } from '../../helpers/week.js';
 
 export function get(req, res) {
 	db.serialize(() => {

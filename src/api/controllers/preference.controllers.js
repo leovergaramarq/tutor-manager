@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
-import setSchedule from '../helpers/schedule.js';
-import { DB_PATH } from '../constants.js';
+import setSchedule from '../../helpers/schedule.js';
+import { DB_PATH } from '../../constants.js';
 import {
 	DAY_TO_SCHEDULE,
 	HOUR_TO_SCHEDULE,
@@ -8,7 +8,7 @@ import {
 	SCHEDULE_DELAY,
 	SCHEDULE_METHOD,
 	SCHEDULE_PREFERRED_HOURS,
-} from '../config.js';
+} from '../../config.js';
 
 export function get(req, res) {
 	db.serialize(() => {
