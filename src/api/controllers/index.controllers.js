@@ -75,4 +75,18 @@ export function login(req, res) {
 	// db.close();
 }
 
+export function logout(req, res) {
+	db.serialize(() => {
+		db.run('DELETE FROM User', err => {
+			if (err) {
+				console.log(err);
+				return res.status(500).json({ message: err.message });
+			}
+			res.status(200).json({ message: 'Logged out successfully' });
+		});
+	});
+
+	// db.close();
+}
+
 const db = new (sqlite3.verbose().Database)(DB_PATH);
