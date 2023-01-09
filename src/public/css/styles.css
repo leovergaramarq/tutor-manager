@@ -7,6 +7,14 @@
     font-family: 'Lato', sans-serif, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
+li {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
 button {
     cursor: pointer;
     outline: none;
@@ -36,4 +44,46 @@ input {
 
 input:focus {
     box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* PARTIALS */
+
+/* navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    font-size: 1.2rem;
+}
+
+.navbar ul {
+    display: flex;
+    padding: 20px 40px;
+}
+
+.navbar ul a {
+    color: var(--white-color);
+}
+
+.navbar__home {
+    font-size: 1.5rem;
+}
+
+.navbar__logout {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    background-color: var(--secondary-color);
+    padding-left: 20px;
+    border-bottom-left-radius: 50%;
+}
+
+.navbar__logout:hover {
+    scale: 1.05;
+}
+
+.navbar__logout i {
+    margin: 0 10px;
 }
