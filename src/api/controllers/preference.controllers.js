@@ -8,6 +8,8 @@ import {
 	SCHEDULE_DELAY,
 	SCHEDULE_METHOD,
 	SCHEDULE_PREFERRED_HOURS,
+	DEADLINE_MINUTES_TO_SCHEDULE,
+	PUPPETEER_HEADLESS
 } from '../../config.js';
 
 export function get(req, res) {
@@ -33,9 +35,11 @@ export function upsert(req, res) {
 		scheduleDelay,
 		scheduleMethod,
 		schedulePreferredHours,
+		deadlineMinutesToSchedule,
+		puppeteerHeadless
 	} = req.body;
 
-	if (hourToSchedule === undefined && !dayToSchedule === undefined && scheduleAnticipation === undefined && scheduleDelay === undefined && scheduleMethod === undefined && schedulePreferredHours === undefined) {
+	if(!Object.keys(req.body).length) {
 		return res.status(400).json({ message: 'Bad request' });
 	}
 
@@ -47,7 +51,29 @@ export function upsert(req, res) {
 		return res.status(400).json({ message: 'Invalid day' });
 	}
 
-	delete req.body['PreferenceID'];
+	if (scheduleAnticipation !== undefined && scheduleAnticipation < 0) {
+		return res.status(400).json({ message: 'Invalid anticipation' });
+	}
+
+	if (scheduleDelay !== undefined && scheduleDelay < 0) {
+		return res.status(400).json({ message: 'Invalid delay' });
+	}
+
+	if (scheduleMethod !== undefined && (scheduleMethod < 0 || scheduleMethod > 1)) {
+		return res.status(400).json({ message: 'Invalid method' });
+	}
+
+	if (schedulePreferredHours !== undefined && (schedulePreferredHours < 0 || schedulePreferredHours > 1)) {
+		return res.status(400).json({ message: 'Invalid preferred hours' });
+	}
+
+	if (deadlineMinutesToSchedule !== undefined && deadlineMinutesToSchedule < 0) {
+		return res.status(400).json({ message: 'Invalid deadline' });
+	}
+
+	if (puppeteerHeadless !== undefined && (puppeteerHeadless < 0 || puppeteerHeadless > 1)) {
+		return res.status(400).json({ message: 'Invalid headless' });
+	}
 
 	db.serialize(() => {
 		db.all('SELECT * FROM Preference', (err, rows) => {
@@ -62,8 +88,10 @@ export function upsert(req, res) {
 				if (scheduleDelay === undefined) scheduleDelay = SCHEDULE_DELAY;
 				if (scheduleMethod === undefined) scheduleMethod = SCHEDULE_METHOD;
 				if (schedulePreferredHours === undefined) schedulePreferredHours = SCHEDULE_PREFERRED_HOURS;
+				if (deadlineMinutesToSchedule === undefined) deadlineMinutesToSchedule = DEADLINE_MINUTES_TO_SCHEDULE;
+				if (puppeteerHeadless === undefined) puppeteerHeadless = PUPPETEER_HEADLESS;
 
-				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours})`, err => {
+				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless})`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -83,8 +111,10 @@ export function upsert(req, res) {
 					if (scheduleDelay === undefined) scheduleDelay = SCHEDULE_DELAY;
 					if (scheduleMethod === undefined) scheduleMethod = SCHEDULE_METHOD;
 					if (schedulePreferredHours === undefined) schedulePreferredHours = SCHEDULE_PREFERRED_HOURS;
+					if (deadlineMinutesToSchedule === undefined) deadlineMinutesToSchedule = DEADLINE_MINUTES_TO_SCHEDULE;
+					if (puppeteerHeadless === undefined) puppeteerHeadless = PUPPETEER_HEADLESS;
 
-					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours})`, err => {
+					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless})`, err => {
 						if (err) {
 							console.log(err);
 							return res.status(500).json({ message: 'Internal server error' });
@@ -100,8 +130,10 @@ export function upsert(req, res) {
 				if (scheduleDelay === undefined) scheduleDelay = rows[0].ScheduleDelay;
 				if (scheduleMethod === undefined) scheduleMethod = rows[0].ScheduleMethod;
 				if (schedulePreferredHours === undefined) schedulePreferredHours = rows[0].SchedulePreferredHours;
+				if (deadlineMinutesToSchedule === undefined) deadlineMinutesToSchedule = rows[0].DeadlineMinutesToSchedule;
+				if (puppeteerHeadless === undefined) puppeteerHeadless = rows[0].PuppeteerHeadless;
 
-				db.run(`UPDATE Preference SET HourToSchedule = ${hourToSchedule}, DayToSchedule = ${dayToSchedule}, ScheduleAnticipation = ${scheduleAnticipation}, ScheduleDelay = ${scheduleDelay}, ScheduleMethod = ${scheduleMethod}, SchedulePreferredHours = ${schedulePreferredHours}`, err => {
+				db.run(`UPDATE Preference SET HourToSchedule = ${hourToSchedule}, DayToSchedule = ${dayToSchedule}, ScheduleAnticipation = ${scheduleAnticipation}, ScheduleDelay = ${scheduleDelay}, ScheduleMethod = ${scheduleMethod}, SchedulePreferredHours = ${schedulePreferredHours}, DeadlineMinutesToSchedule = ${deadlineMinutesToSchedule}, PuppeteerHeadless = ${puppeteerHeadless}`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -122,7 +154,7 @@ export function reset(req, res) {
 				return res.status(500).json({ message: 'Internal server error' });
 			}
 			if (!rows.length) {
-				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS})`, err => {
+				db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS})`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
@@ -136,7 +168,7 @@ export function reset(req, res) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
 					}
-					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS})`, err => {
+					db.run(`INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS})`, err => {
 						if (err) {
 							console.log(err);
 							return res.status(500).json({ message: 'Internal server error' });
@@ -146,7 +178,7 @@ export function reset(req, res) {
 					});
 				});
 			} else {
-				db.run(`UPDATE Preference SET HourToSchedule = ${HOUR_TO_SCHEDULE}, DayToSchedule = ${DAY_TO_SCHEDULE}, ScheduleAnticipation = ${SCHEDULE_ANTICIPATION}, ScheduleDelay = ${SCHEDULE_DELAY}, ScheduleMethod = ${SCHEDULE_METHOD}, SchedulePreferredHours = ${SCHEDULE_PREFERRED_HOURS}`, err => {
+				db.run(`UPDATE Preference SET HourToSchedule = ${HOUR_TO_SCHEDULE}, DayToSchedule = ${DAY_TO_SCHEDULE}, ScheduleAnticipation = ${SCHEDULE_ANTICIPATION}, ScheduleDelay = ${SCHEDULE_DELAY}, ScheduleMethod = ${SCHEDULE_METHOD}, SchedulePreferredHours = ${SCHEDULE_PREFERRED_HOURS}, DeadlineMinutesToSchedule = ${DEADLINE_MINUTES_TO_SCHEDULE}, PuppeteerHeadless = ${PUPPETEER_HEADLESS}`, err => {
 					if (err) {
 						console.log(err);
 						return res.status(500).json({ message: 'Internal server error' });
