@@ -43,21 +43,21 @@ app.use('/', pageRouter);
 // error handler
 // app.use((_, res) => res.status(404).render('404'));
 
-// initDB(err => {
-// 	console.log('Initializing database...');
-// 	if (err) {
-// 		console.log('ERROR: Database not initialized.');
-// 		return console.log(err);
-// 	}
-// 	console.log('Initializing preferences...');
-// 	preferences(err => {
-// 		if (err) {
-// 			console.log('ERROR: Couldn\'t read preferences.');
-// 			return console.log(err);
-// 		}
-// 		console.log('Programming schedule...');
-// 		setSchedule();
-// 	});
-// });
+initDB(err => {
+	console.log('Initializing database...');
+	if (err) {
+		console.log('ERROR: Database not initialized.');
+		return console.log(err);
+	}
+	console.log('Initializing preferences...');
+	preferences(err => {
+		if (err) {
+			console.log('ERROR: Couldn\'t read preferences.');
+			return console.log(err);
+		}
+		console.log('Programming schedule...');
+		setSchedule();
+	});
+});
 
 export default app;

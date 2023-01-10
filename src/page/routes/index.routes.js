@@ -2,17 +2,12 @@ import { Router } from 'express';
 import login from './login.routes.js';
 import preferences from './preferences.routes.js';
 import schedule from './schedule.routes.js';
+import home from '../controllers/index.controllers.js';
 import { loggedIn, loggedOut } from '../../middlewares/session.js';
 
 const router = Router();
 
-router.get('/', loggedIn, (req, res) => (
-    res.status(200).render('home', {
-        _title: 'Home | Tutor Manager',
-        _styles: ['/css/home.css'],
-        user: req.user
-    })
-));
+router.get('/', loggedIn, home);
 
 router.use('/login', loggedOut, login);
 router.use('/preferences', loggedIn, preferences);

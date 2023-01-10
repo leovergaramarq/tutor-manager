@@ -1,12 +1,17 @@
 :root {
     --primary-color: #1e90ff;
-    --secondary-color: #074c91;
-    --tertiary-color: #e9eefa;
+    --secondary-color: #1868b9;
+    --tertiary-color: #074c91;
+    --quaternary-color: #e9eefa;
     --white-color: #fff;
-    --white-color-2: #f5f5f5;
+    --white-color-2: #f0f0f0;
     --black-color: #000;
     --black-color-2: #333;
     --gray-color: #ccc;
     --gray-color-2: #999;
     --gray-color-3: #666;
+    --gray-color-4: #ddd;
+    --gray-color-5: #eee;
+    --green-color: #64d366;
+    --font-family: 'Lato', sans-serif, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }

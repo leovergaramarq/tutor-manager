@@ -1,4 +1,3 @@
-// function that gets the sunday and saturday of the week of a given date
 export function getWeekBounds(date = new Date()) {
     const day = date.getDay();
     
@@ -13,6 +12,6 @@ export function getWeekBounds(date = new Date()) {
     return [sunday, saturday];
 }
 
-export function weekMatrix() {
+export function getWeekMatrix() {
     return Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
 }

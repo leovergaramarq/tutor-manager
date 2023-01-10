@@ -3,7 +3,7 @@
 main {
     position: relative;
     height: 100vh;
-    background-color: var(--tertiary-color);
+    background-color: var(--quaternary-color);
 }
 
 .container {
@@ -39,4 +39,5 @@ form {
 
 button {
     margin-top: 20px;
+    font-size: 1rem;
 }

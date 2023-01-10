@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { DB_PATH } from '../../constants.js';
-import { weekMatrix } from '../../helpers/week.js';
+import { getWeekMatrix } from '../../helpers/week.js';
 
 export function get(req, res) {
 	db.serialize(() => {
@@ -10,7 +10,7 @@ export function get(req, res) {
 				return res.status(500).json({ message: err.message });
 			}
 			console.log(hours);
-			const week = weekMatrix();
+			const week = getWeekMatrix();
 			hours.forEach(({ Day, Hour }) => week[Day][Hour] = 1);
 
 			res.status(200).json(week);

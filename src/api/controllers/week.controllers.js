@@ -1,13 +1,21 @@
 import sqlite3 from 'sqlite3';
 import { DB_PATH } from '../../constants.js';
-import { getWeekBounds, weekMatrix } from '../../helpers/week.js';
+import { getWeekBounds, getWeekMatrix } from '../../helpers/week.js';
 import { schedule as sch } from '../../helpers/schedule.js';
 
 export function get(req, res) {
-	let { date } = req.params;
+	const { week } = req.params;
 
-	if (!date) {
+	let date;
+
+	if (week === undefined) {
 		date = new Date();
+	} else if (!isNaN(week)) {
+		if(week < 0) {
+			return res.status(400).json({ message: 'Invalid week' });
+		}
+		date = new Date();
+		date.setDate(date.getDate() + week * 7);
 	} else {
 		date = new Date(date.replace(/-/g, '/'));
 		if (date == 'Invalid Date') {
@@ -16,6 +24,7 @@ export function get(req, res) {
 			date = new Date(date);
 		}
 	}
+
 	console.log(date);
 
 	const [sunday, saturday] = getWeekBounds(date);
@@ -32,7 +41,7 @@ export function get(req, res) {
 				return res.status(500).json({ message: err.message });
 			}
 			console.log(hours);
-			const week = weekMatrix();
+			const week = getWeekMatrix();
 			hours.forEach(({ Day, Hour }) => week[Day - sunday.getDate()][Hour] = 1);
 
 			res.status(200).json(week);
@@ -75,6 +84,8 @@ export function clearWeek(req, res) {
 
 export function schedule(req, res) {
 	const { week } = req.body; // if week=0 is provided, schedule the current week; otherwise, schedule the next week
+	if (week > 1) return res.status(400).json({ message: 'Invalid week' });
+	
 	db.serialize(() => {
 		db.all('SELECT * FROM Preference', (err, rows) => {
 			if (err) {

@@ -4,7 +4,7 @@
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    font-family: 'Lato', sans-serif, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 li {
@@ -19,17 +19,29 @@ button {
     cursor: pointer;
     outline: none;
     border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+button.btn-primary {
     background-color: var(--primary-color);
     color: var(--white-color);
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 1rem;
-    font-weight: 700;
     transition: all 0.3s ease;
 }
 
-button:hover {
+button.btn-primary:hover {
     background-color: var(--secondary-color);
+}
+
+button.btn-secondary {
+    background-color: var(--gray-color);
+    color: var(--black-color-2);
+    transition: all 0.3s ease;
+}
+
+button.btn-secondary:hover {
+    background-color: var(--gray-color-2);
 }
 
 input {
@@ -50,16 +62,23 @@ input:focus {
 
 /* navbar */
 .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
     display: flex;
     justify-content: space-between;
     background-color: var(--primary-color);
     color: var(--white-color);
     font-size: 1.2rem;
+    z-index: 999;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 .navbar ul {
     display: flex;
-    padding: 20px 40px;
+    padding: 10px 40px;
 }
 
 .navbar ul a {
@@ -74,10 +93,11 @@ input:focus {
     cursor: pointer;
     display: flex;
     align-items: center;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
     background-color: var(--secondary-color);
-    padding-left: 20px;
+    padding-left: 26px;
     border-bottom-left-radius: 50%;
+    font-size: 1rem;
 }
 
 .navbar__logout:hover {
@@ -86,4 +106,44 @@ input:focus {
 
 .navbar__logout i {
     margin: 0 10px;
+}
+
+/* calendar */
+
+.calendar {
+    background-color: var(--gray-color);
+    border-radius: 5px;
+    font-size: 0.8rem;
+}
+
+.calendar table {
+    width: 100%;
+    /* border-collapse: collapse; */
+}
+
+.calendar table td {
+    padding: 2px 0;
+}
+
+.calendar table thead {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+
+.calendar tbody .hour {
+    background-color: var(--white-color);
+}
+
+.calendar tbody .cell {
+    background-color: var(--gray-color-4);
+    cursor: pointer;
+}
+
+.calendar tbody .cell:hover {
+    background-color: var(--green-color);
+    opacity: 0.5;
+}
+
+.calendar tbody .cell.selected {
+    background-color: var(--green-color);
 }

@@ -30,11 +30,7 @@ export default function setSchedule() {
 			} = preferences;
 
 			const date = new Date();
-			const dateSched = dateToSchedule(date, dayToSchedule, hourToSchedule);
-
-			if ((date - dateSched) / 60000 > DEADLINE_MINUTES_TO_SCHEDULE) { // if the hour to schedule is in the past, schedule for next week
-				dateSched.setDate(dateSched.getDate() + 7);
-			}
+			const dateSched = getDateToSchedule(date, dayToSchedule, hourToSchedule);
 
 			// clearTimeout(timeoutSetSched);
 			timeoutSetSched = setTimeout(() => {
@@ -49,11 +45,16 @@ export default function setSchedule() {
 				schedule(1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours);
 			}, (dateSched - date) - scheduleAnticipation);
 
-			const milisToSched = ((dateSched - date) - scheduleAnticipation);
-			const days = milisToSched / 86400000;
-			const hours = (days - parseInt(days)) * 24;
-			const minutes = (hours - parseInt(hours)) * 60;
-			console.log(`Scheduling will take place within ${parseInt(days)} days, ${parseInt(hours)} hours, ${minutes.toFixed(2)} minutes.`);
+			const milisToSched = (dateSched - date) - scheduleAnticipation;
+			
+			if(milisToSched < 0) {
+				console.log('Scheduling now...');
+			} else {
+				const days = milisToSched / 86400000;
+				const hours = (days - parseInt(days)) * 24;
+				const minutes = (hours - parseInt(hours)) * 60;
+				console.log(`Scheduling will take place within ${parseInt(days)} days, ${parseInt(hours)} hours, ${minutes.toFixed(2)} minutes.`);
+			}
 		});
 	});
 }
@@ -122,7 +123,7 @@ export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMetho
 						// await page.waitForNavigation();
 					}
 
-					if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
+					// if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
 
 					if (dateSched) { // wait for the hour to schedule
 						const date = new Date();
@@ -130,11 +131,11 @@ export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMetho
 						// clearTimeout(timeoutFinishSched);
 						timeoutFinishSched = setTimeout(() => {
 							timeoutFinishSched = null;
-							finishSchedule(page, browser, users, hours, week, scheduleMethod);
+							finishSchedule(page, browser, users, hours, week, scheduleMethod, callback);
 						}, (dateSched - date) + scheduleDelay);
 
 					} else { // schedule immediately
-						finishSchedule(page, browser, users, hours, week, scheduleMethod);
+						finishSchedule(page, browser, users, hours, week, scheduleMethod, callback);
 					}
 				} catch (err) {
 					console.log(err);
@@ -145,7 +146,7 @@ export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMetho
 	});
 }
 
-async function finishSchedule(page, browser, users, hours, week, scheduleMethod) {
+async function finishSchedule(page, browser, users, hours, week, scheduleMethod, callback) {
 	try {
 		await page.click('.ScheduleManagerLink');
 		const target = await browser.waitForTarget(target => target.opener() === page.target());
@@ -174,13 +175,10 @@ async function finishSchedule(page, browser, users, hours, week, scheduleMethod)
 
 		await schedulePage.waitForSelector('#lblAvailableHours'); // wait for the page to load
 
-		if(scheduleMethod === 0) { // schedule by adding
-			await scheduleByAdding(schedulePage, hours);
-		} else { // = 1, schedule by area
-			await scheduleByArea(schedulePage, hours);
-		}
-
+		const count = scheduleMethod === 0 ? await scheduleByAdding(schedulePage, hours) : await scheduleByArea(schedulePage, hours);
+		callback(200, `Scheduled ${count}/${hours.length} hours.`);
 		console.log(`Scheduled ${count}/${hours.length} hours.`);
+
 	} catch (err) {
 		console.log(err);
 	}
@@ -300,13 +298,17 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function dateToSchedule(date, dayToSchedule, hourToSchedule) {
+export function getDateToSchedule(date, dayToSchedule, hourToSchedule) {
 	const day = date.getDate() + (dayToSchedule - date.getDay() + 7) % 7;
 	const hour = hourToSchedule;
 
 	const dateSched = new Date(date);
 	dateSched.setDate(day);
 	dateSched.setHours(hour, 0, 0, 0);
+
+	if ((date - dateSched) / 60000 > DEADLINE_MINUTES_TO_SCHEDULE) { // if the hour to schedule is in the past, schedule for next week
+		dateSched.setDate(dateSched.getDate() + 7);
+	}
 
 	return dateSched;
 }
