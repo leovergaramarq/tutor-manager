@@ -9,23 +9,28 @@ window.addEventListener('load', () => {
             const {
                 HourToSchedule: hourToSchedule,
                 DayToSchedule: dayToSchedule,
-                ScheduleAnticipation: scheduleAnticipation,
                 DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
+                ScheduleAnticipation
             } = data;
+            scheduleAnticipation = ScheduleAnticipation;
 
-            const date = getEasternTime();
-            const dateToSchedule = getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
-            timeLeft = (dateToSchedule - date) - scheduleAnticipation;
-            startTimeLeft();
+            dateToSchedule = getDateToSchedule(getEasternTime(), dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
+
+            updateTime();
+            updateTimeLeft();
+            setInterval(() => {
+                updateTime();
+                updateTimeLeft();
+            }, 1000);
         })
-        .catch(console.error);
-
-    // set time
-    updateTime();
-    setInterval(updateTime, 1000);
+        .catch(err => {
+            console.error(err);
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
 
     // set eastern gmt
-    document.querySelector('.time-eastern .section-time__item__timezone').textContent = `Nueva York, EEUU (GMT ${getEasternGMT()})`;
+    document.querySelector('.time-eastern .section-time__item__timezone').textContent.replace('-5', getEasternGMT());
 
     // set header
     updateHeader();
@@ -137,19 +142,13 @@ function updateTime() {
     $timeEastern.textContent = timeFormat(getEasternTime());
 }
 
-function startTimeLeft() {
-    updateTimeLeft();
-    intervalTimeLeft = setInterval(updateTimeLeft, 1000);
-}
-
 function updateTimeLeft() {
+    const timeLeft = dateToSchedule - new Date() - scheduleAnticipation;
     if (timeLeft <= 0) {
         $timeLeft.textContent = '0d 0h 0m 0s';
-        clearInterval(intervalTimeLeft);
-        setTimeout(() => { // reset time left to 1 week
-            timeLeft = 604800000;
-            startTimeLeft();
-        }, 3600000);
+        setTimeout(() => {
+            dateToSchedule = new Date(dateToSchedule.getTime() + 604800000);
+        }, 3600000 + 1);
     } else {
         // const date = new Date(timeLeft);
         // $timeLeft.textContent = `${date.getDate() - 1}d ${date.getHours()}h ${date.getMinutes()}m ${date.getSeconds()}s`;
@@ -159,7 +158,6 @@ function updateTimeLeft() {
         const seconds = minutes % 1 * 60;
         $timeLeft.textContent = `${Math.floor(days)}d ${Math.floor(hours)}h ${Math.floor(minutes)}m ${Math.floor(seconds)}s`;
     }
-    timeLeft -= 1000;
 }
 
 function updateHeader() {
@@ -185,6 +183,7 @@ const $timeLocal = document.querySelector('.time-local .section-time__item__time
 const $timeEastern = document.querySelector('.time-eastern .section-time__item__time');
 const $timeLeft = document.querySelector('.time-left .section-time__item__time');
 
-let timeLeft, intervalTimeLeft;
 let week = 0;
 let weekMatrix;
+let dateToSchedule;
+let scheduleAnticipation;
