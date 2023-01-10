@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS "Preference" (
 	"ScheduleDelay"	INTEGER NOT NULL DEFAULT 1000,
 	"ScheduleMethod"	INTEGER NOT NULL DEFAULT 0,
 	"SchedulePreferredHours"	INTEGER NOT NULL DEFAULT 0,
+	"DeadlineMinutesToSchedule"	INTEGER NOT NULL DEFAULT 60,
+	"PuppeteerHeadless"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("PreferenceID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "PreferredHour" (

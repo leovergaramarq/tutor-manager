@@ -3,9 +3,6 @@ import sqlite3 from 'sqlite3';
 import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
 import { getWeekBounds } from './week.js';
-import {
-	DEADLINE_MINUTES_TO_SCHEDULE, PUPPETEER_HEADLESS,
-} from '../config.js';
 
 export default function setSchedule() {
 	console.log('Setting schedule...');
@@ -27,10 +24,12 @@ export default function setSchedule() {
 				ScheduleDelay: scheduleDelay,
 				ScheduleMethod: scheduleMethod,
 				SchedulePreferredHours: schedulePreferredHours,
+				DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
+				PuppeteerHeadless: puppeteerHeadless
 			} = preferences;
 
 			const date = new Date();
-			const dateSched = getDateToSchedule(date, dayToSchedule, hourToSchedule);
+			const dateSched = getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
 
 			// clearTimeout(timeoutSetSched);
 			timeoutSetSched = setTimeout(() => {
@@ -38,29 +37,38 @@ export default function setSchedule() {
 
 				// clearInterval(intervalWeekly);
 				intervalWeekly = setInterval(() => { //reset after 7 days
-					schedule(1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours);
+					schedule(1, dateSched, {
+						scheduleDelay, scheduleMethod, schedulePreferredHours, puppeteerHeadless
+					});
 				}, 604800000);
 
 				console.log(`Unwanted delay: ${(new Date() - date) / 1000}s`);
-				schedule(1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours);
+				schedule(1, dateSched, {
+					scheduleDelay, scheduleMethod, schedulePreferredHours, puppeteerHeadless
+				});
 			}, (dateSched - date) - scheduleAnticipation);
 
 			const milisToSched = (dateSched - date) - scheduleAnticipation;
 			
-			if(milisToSched < 0) {
+			if(milisToSched <= 0) {
 				console.log('Scheduling now...');
 			} else {
 				const days = milisToSched / 86400000;
-				const hours = (days - parseInt(days)) * 24;
-				const minutes = (hours - parseInt(hours)) * 60;
-				console.log(`Scheduling will take place within ${parseInt(days)} days, ${parseInt(hours)} hours, ${minutes.toFixed(2)} minutes.`);
+				const hours = (days - Math.floor(days)) * 24;
+				const minutes = (hours - Math.floor(hours)) * 60;
+				console.log(`Scheduling will take place within ${Math.floor(days)} days, ${Math.floor(hours)} hours, ${minutes.toFixed(2)} minutes.`);
 			}
 		});
 	});
 }
 
 // week = 0 for this week, 1 for next week
-export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMethod, schedulePreferredHours, callback) {
+export async function schedule(week = 1, dateSched, preferences, callback) {
+	if (week < 0 || week > 1) {
+		if (callback) callback(400, 'Invalid week.');
+		return;
+	}
+	
 	console.log('Scheduling...');
 	clearTimeout(timeoutFinishSched);
 
@@ -76,14 +84,16 @@ export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMetho
 				return;
 			}
 
+			const { scheduleDelay, scheduleMethod, schedulePreferredHours } = preferences;
+
 			db.all(schedulePreferredHours ? 'SELECT * FROM PreferredHour' : 'SELECT * FROM Hour' , async (err, hours) => {
 				if (err) {
 					console.log(err);
 					return res.status(500).json({ message: err.message });
 				}
 				// get hours for the week
-				const [sunday, saturday] = getWeekBounds(week ? new Date(new Date().getTime() + 604800000) : new Date()); // 604800000 = 7 days in case week is 1
 				const now = new Date();
+				const [sunday, saturday] = getWeekBounds(new Date(now.getTime() + week * 604800000)); // 604800000 = 7 days in case week is 1
 
 				// filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
 				if(schedulePreferredHours === 0) {
@@ -108,7 +118,7 @@ export async function schedule(week = 1, dateSched, scheduleDelay, scheduleMetho
 				console.log(hours);
 				try {
 					// start puppeteer
-					const browser = await puppeteer.launch({ headless: PUPPETEER_HEADLESS });
+					const browser = await puppeteer.launch({ headless: PUPPETEER_HEADLESS ? true : false });
 					const page = await browser.newPage();
 					await page.goto(URL_SCHEDULE);
 					// await page.waitForNavigation();
@@ -263,9 +273,9 @@ async function scheduleByArea(schedulePage, hours) {
 						const hourWanted = hours.find(({ Year, Month, Day, Hour }) => {
 							if (Year) { // using table Hour
 								const date = new Date(`${Year}/${Month}/${Day}`);
-								return date.getDay() === dayOfWeek && Hour === parseInt(i / 7);
+								return date.getDay() === dayOfWeek && Hour === Math.floor(i / 7);
 							} else {
-								return Day === dayOfWeek && Hour === parseInt(i / 7);
+								return Day === dayOfWeek && Hour === Math.floor(i / 7);
 							}
 						});
 						if (!hourWanted) {
@@ -288,6 +298,7 @@ async function scheduleByArea(schedulePage, hours) {
 
 	if (count < hours.length) {
 		// 3. schedule the missing hours
+		console.log('Scheduling the missing hours...');
 		count += await scheduleByAdding(schedulePage, hours.filter(hour => !hour.scheduled));
 	}
 
@@ -298,7 +309,7 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function getDateToSchedule(date, dayToSchedule, hourToSchedule) {
+function getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule) {
 	const day = date.getDate() + (dayToSchedule - date.getDay() + 7) % 7;
 	const hour = hourToSchedule;
 
@@ -306,7 +317,7 @@ export function getDateToSchedule(date, dayToSchedule, hourToSchedule) {
 	dateSched.setDate(day);
 	dateSched.setHours(hour, 0, 0, 0);
 
-	if ((date - dateSched) / 60000 > DEADLINE_MINUTES_TO_SCHEDULE) { // if the hour to schedule is in the past, schedule for next week
+	if ((date - dateSched) / 60000 > deadlineMinutesToSchedule) { // if the hour to schedule is in the past, schedule for next week
 		dateSched.setDate(dateSched.getDate() + 7);
 	}
 

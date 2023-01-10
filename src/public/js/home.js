@@ -1,13 +1,31 @@
 import fetch from './fetch.js';
-import { getEasternGMT, getEasternTime, getWeekBounds, getWeekMatrix } from './utils.js';
+import { getEasternGMT, getEasternTime, getWeekBounds, getWeekMatrix, getDateToSchedule } from './utils.js';
 
 window.addEventListener('load', () => {
-    // set eastern gmt
-    document.querySelector('.time-eastern .section-time__item__timezone').textContent = `Nueva York, EEUU (GMT ${getEasternGMT()})`;
+    // set remaining time
+    fetch('/api/preferences')
+        .then(({ status, data }) => {
+            if (status !== 200) return console.error(data.message);
+            const {
+                HourToSchedule: hourToSchedule,
+                DayToSchedule: dayToSchedule,
+                ScheduleAnticipation: scheduleAnticipation,
+                DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
+            } = data;
+
+            const date = getEasternTime();
+            const dateToSchedule = getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
+            timeLeft = (dateToSchedule - date) - scheduleAnticipation;
+            startTimeLeft();
+        })
+        .catch(console.error);
 
     // set time
     updateTime();
     setInterval(updateTime, 1000);
+
+    // set eastern gmt
+    document.querySelector('.time-eastern .section-time__item__timezone').textContent = `Nueva York, EEUU (GMT ${getEasternGMT()})`;
 
     // set header
     updateHeader();
@@ -32,18 +50,18 @@ window.addEventListener('load', () => {
         } else {
             const save = async () => {
                 const $cells = document.querySelector('.section-calendar table tbody').querySelectorAll('.cell');
-    
+
                 const newWeekMatrix = getWeekMatrix();
                 for (let i = 0; i < $cells.length; i++) {
                     const id = +$cells[i].id.split('cell')[1];
                     const day = id % 7;
                     const hour = Math.floor(id / 7);
-    
+
                     if ($cells[i].classList.contains('selected')) {
                         newWeekMatrix[day][hour] = 1;
                     }
                 }
-    
+
                 try {
                     const { status, data } = await fetch('/api/hours', {
                         method: 'POST',
@@ -65,7 +83,7 @@ window.addEventListener('load', () => {
             } else if (e.target.classList.contains('section-schedule__schedule')) {
                 const $buttons = document.querySelectorAll('.section-schedule button');
                 $buttons.forEach($button => $button.disabled = true);
-                
+
                 const result = await save();
                 if (!result) return alert('Error al guardar los cambios');
                 try {
@@ -119,6 +137,31 @@ function updateTime() {
     $timeEastern.textContent = timeFormat(getEasternTime());
 }
 
+function startTimeLeft() {
+    updateTimeLeft();
+    intervalTimeLeft = setInterval(updateTimeLeft, 1000);
+}
+
+function updateTimeLeft() {
+    if (timeLeft <= 0) {
+        $timeLeft.textContent = '0d 0h 0m 0s';
+        clearInterval(intervalTimeLeft);
+        setTimeout(() => { // reset time left to 1 week
+            timeLeft = 604800000;
+            startTimeLeft();
+        }, 3600000);
+    } else {
+        // const date = new Date(timeLeft);
+        // $timeLeft.textContent = `${date.getDate() - 1}d ${date.getHours()}h ${date.getMinutes()}m ${date.getSeconds()}s`;
+        const days = timeLeft / 86400000;
+        const hours = days % 1 * 24;
+        const minutes = hours % 1 * 60;
+        const seconds = minutes % 1 * 60;
+        $timeLeft.textContent = `${Math.floor(days)}d ${Math.floor(hours)}h ${Math.floor(minutes)}m ${Math.floor(seconds)}s`;
+    }
+    timeLeft -= 1000;
+}
+
 function updateHeader() {
     const [sunday, saturday] = getWeekBounds(week);
     document.querySelector('.section-calendar__header__title').textContent = `Semana del ${sunday.getDate()} al ${saturday.getDate()}`;
@@ -140,5 +183,8 @@ async function fetchCalendar() {
 
 const $timeLocal = document.querySelector('.time-local .section-time__item__time');
 const $timeEastern = document.querySelector('.time-eastern .section-time__item__time');
+const $timeLeft = document.querySelector('.time-left .section-time__item__time');
+
+let timeLeft, intervalTimeLeft;
 let week = 0;
 let weekMatrix;

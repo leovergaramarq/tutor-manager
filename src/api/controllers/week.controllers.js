@@ -84,7 +84,6 @@ export function clearWeek(req, res) {
 
 export function schedule(req, res) {
 	const { week } = req.body; // if week=0 is provided, schedule the current week; otherwise, schedule the next week
-	if (week > 1) return res.status(400).json({ message: 'Invalid week' });
 	
 	db.serialize(() => {
 		db.all('SELECT * FROM Preference', (err, rows) => {
@@ -97,14 +96,16 @@ export function schedule(req, res) {
 				return res.status(400).json({ message: 'No preferences found' });
 			}
 
-			const { ScheduleMethod, SchedulePreferredHours } = rows[0];
+			const {
+				ScheduleMethod: scheduleMethod,
+				SchedulePreferredHours: schedulePreferredHours,
+				PuppeteerHeadless: puppeteerHeadless,
+			} = rows[0];
 
 			sch(
 				week === 0 ? week : 1,
 				null,
-				null,
-				ScheduleMethod,
-				SchedulePreferredHours,
+				{ scheduleMethod, schedulePreferredHours, puppeteerHeadless },
 				(status, message) => res.status(status).json({ message })
 			);
 		});
