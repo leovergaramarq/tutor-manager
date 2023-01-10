@@ -38,9 +38,10 @@ export function add(req, res) {
 		});
 	} else { // schedule week
 		const { hours } = req.body;
+		// console.log(hours);
 		if (!hours) return res.status(400).json({ message: 'Missing hours' });
 		if (isNaN(week) || week < 0) return res.status(400).json({ message: 'Invalid week' });
-		if (!Array.isArray(hours) || !hours.length !== 7 || hours[0].length !== 24) {
+		if (!Array.isArray(hours) || hours.length !== 7 || hours[0].length !== 24) {
 			return res.status(400).json({ message: 'Invalid hours' });
 		}
 

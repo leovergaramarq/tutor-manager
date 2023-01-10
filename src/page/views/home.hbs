@@ -1,1 +1,40 @@
 {{> navbar }}
+
+<main>
+    <section class="section-time">
+        <div class="section-time__item time-local">
+            <div class="section-time__item__title">Hora local</div>
+            <div class="section-time__item__time">...</div>
+            <div class="section-time__item__timezone">
+                Bogotá, Colombia (GMT -5)
+            </div>
+        </div>
+        <div class="section-time__item time-eastern">
+            <div class="section-time__item__title">Hora del este</div>
+            <div class="section-time__item__time">...</div>
+            <div class="section-time__item__timezone">
+                Nueva York, EEUU (GMT -5)
+            </div>
+        </div>
+    </section>
+
+    <section class="section-schedule">
+        <hr>
+        <div class="section-schedule__changes">
+            <button class="section-schedule__cancel btn-secondary">Descartar cambios</button>
+            <button class="section-schedule__save btn-primary">Guardar cambios</button>
+        </div>
+        <button class="section-schedule__schedule btn-primary">Guardar y agendar ahora</button>
+    </section>
+
+    <section class="section-calendar">
+        <div class="section-calendar__header">
+            <i class="section-calendar__header__arrow arrow-left fas fa-chevron-left"></i>
+            <div class="section-calendar__header__title">Semana actual</div>
+            <i class="section-calendar__header__arrow arrow-right fas fa-chevron-right"></i>
+        </div>
+        {{> calendar }}
+    </section>
+</main>
+
+<script type="module" src="/js/home.js"></script>

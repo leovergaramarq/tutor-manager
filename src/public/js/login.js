@@ -2,8 +2,10 @@ import fetch from './fetch.js';
 
 document.querySelector('#login').addEventListener('click', async function(e) {
     e.preventDefault();
+    
     const username = document.querySelector('#username').value;
     const password = document.querySelector('#password').value;
+    if(!username || !password) return alert('Please fill all the fields');
 
     try {
         const { status } = await fetch('/api/login', {
