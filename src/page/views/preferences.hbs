@@ -1,1 +1,70 @@
-preferences
+{{> navbar }}
+<main>
+    <div class="container">
+        <h1>Ajustes de Preferencias</h1>
+
+        <form>
+            <div class="form-area-input">
+                <div class="form-column">
+                    <div class="form-row">
+                        <label for="dayToSchedule">Día para agendar</label>
+                        <select id="dayToSchedule">
+                            <option value="0">Domingo</option>
+                            <option value="1">Lunes</option>
+                            <option value="2">Martes</option>
+                            <option value="3">Miércoles</option>
+                            <option value="4">Jueves</option>
+                            <option value="5">Viernes</option>
+                            <option value="6">Sábado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="hourToSchedule">Hora para agendar</label>
+                        <input id="hourToSchedule" type="time" step="3600">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="scheduleAnticipation">Segundos de anticipación para iniciar scrapping</label>
+                        <input id="scheduleAnticipation" type="number" min="0">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="scheduleDelay">Milisegundos de delay para agendar</label>
+                        <input id="scheduleDelay" type="number" min="0">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="deadlineMinutesToSchedule">Minutos para agendar luego de la hora</label>
+                        <input id="deadlineMinutesToSchedule" type="number">
+                    </div>
+                </div>
+                <div class="form-column">
+                    <div class="form-row">
+                        <label for="scheduleMethod">Método de agendamiento</label>
+                        <select id="scheduleMethod">
+                            <option value="0">Hora a hora</option>
+                            <option value="1">Seleccionar área y descartar</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="schedulePreferredHours">Usar horas preferidas</label>
+                        <input id="schedulePreferredHours" type="checkbox">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="puppeteerHeadless">Usar navegador sin interfaz</label>
+                        <input id="puppeteerHeadless" type="checkbox">
+                    </div>
+                </div>
+            </div>
+            <div class="form-area-buttons">
+                <button class="btn-secondary" type="submit" id="reset">Restablecer valores por defecto</button>
+                <button class="btn-primary" type="submit" id="save">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script type="module" src="/js/preferences.js"></script>

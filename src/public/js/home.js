@@ -6,14 +6,30 @@ window.addEventListener('load', () => {
     fetch('/api/preferences')
         .then(({ status, data }) => {
             if (status !== 200) return console.error(data.message);
+
             const {
                 HourToSchedule: hourToSchedule,
                 DayToSchedule: dayToSchedule,
+                ScheduleAnticipation: scheduleAnticipation,
+                ScheduleDelay: scheduleDelay,
+                ScheduleMethod: scheduleMethod,
+                SchedulePreferredHours: schedulePreferredHours,
                 DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
-                ScheduleAnticipation
+                PuppeteerHeadless: puppeteerHeadless
             } = data;
-            scheduleAnticipation = ScheduleAnticipation;
 
+            preferences = {
+                hourToSchedule,
+                dayToSchedule,
+                scheduleAnticipation,
+                scheduleDelay,
+                scheduleMethod,
+                schedulePreferredHours,
+                deadlineMinutesToSchedule,
+                puppeteerHeadless
+            };
+
+            // start clocks
             dateToSchedule = getDateToSchedule(getEasternTime(), dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
 
             updateTime();
@@ -22,6 +38,9 @@ window.addEventListener('load', () => {
                 updateTime();
                 updateTimeLeft();
             }, 1000);
+
+            // set header
+            updateHeader();
         })
         .catch(err => {
             console.error(err);
@@ -32,9 +51,6 @@ window.addEventListener('load', () => {
     // set eastern gmt
     document.querySelector('.time-eastern .section-time__item__timezone').textContent.replace('-5', getEasternGMT());
 
-    // set header
-    updateHeader();
-
     // change week event
     document.querySelector('.section-calendar__header').addEventListener('click', (e) => {
         if (e.target.classList.contains('section-calendar__header__arrow')) {
@@ -44,7 +60,9 @@ window.addEventListener('load', () => {
                 week++;
             }
             updateHeader();
-            fetchCalendar();
+            if (!preferences.schedulePreferredHours) { // fetch hours for week if not using preferred hours
+                fetchCalendar();
+            }
         }
     });
 
@@ -67,11 +85,20 @@ window.addEventListener('load', () => {
                     }
                 }
 
+                let endpoint, body;
+                if (preferences.schedulePreferredHours) {
+                    endpoint = '/api/preferredHours';
+                    body = { hours: newWeekMatrix };
+                } else {
+                    endpoint = '/api/hours';
+                    body = { week, hours: newWeekMatrix };
+                }
+
                 try {
-                    const { status, data } = await fetch('/api/hours', {
+                    const { status, data } = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: { week, hours: newWeekMatrix }
+                        body
                     });
                     if (status !== 201) throw new Error(data.message);
                     weekMatrix = newWeekMatrix;
@@ -143,7 +170,7 @@ function updateTime() {
 }
 
 function updateTimeLeft() {
-    const timeLeft = dateToSchedule - new Date() - scheduleAnticipation;
+    const timeLeft = dateToSchedule - new Date() - preferences.scheduleAnticipation;
     if (timeLeft <= 0) {
         $timeLeft.textContent = '0d 0h 0m 0s';
         setTimeout(() => {
@@ -162,7 +189,7 @@ function updateTimeLeft() {
 
 function updateHeader() {
     const [sunday, saturday] = getWeekBounds(week);
-    document.querySelector('.section-calendar__header__title').textContent = `Semana del ${sunday.getDate()} al ${saturday.getDate()}`;
+    document.querySelector('.section-calendar__header__title').textContent = `Semana del ${sunday.getDate()} al ${saturday.getDate()} (${preferences.schedulePreferredHours ? 'Horas preferidas' : 'Horario por semana'})`;
 }
 
 async function fetchCalendar() {
@@ -170,7 +197,7 @@ async function fetchCalendar() {
         const { status, data } = await fetch('/api/week/' + week);
         if (status === 200) {
             // data[6][23] = 1; // test
-            console.log(data);
+            // console.log(data);
             weekMatrix = data;
             updateCalendar();
         }
@@ -186,4 +213,4 @@ const $timeLeft = document.querySelector('.time-left .section-time__item__time')
 let week = 0;
 let weekMatrix;
 let dateToSchedule;
-let scheduleAnticipation;
+let preferences;

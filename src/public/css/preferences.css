@@ -1,0 +1,52 @@
+@import url('base.css');
+
+main {
+    position: relative;
+    height: 100vh;
+    background-color: var(--quaternary-color);
+    margin-top: 50px;
+    padding: 8px 48px;
+    text-align: center;
+}
+
+.container {
+    padding-top: 8px;
+}
+
+h1 {
+    font-size: 1.7rem;
+}
+
+form {
+    padding: 32px 64px;
+    margin: 16px auto;
+    background-color: var(--white-color-2);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+    width: fit-content;
+}
+
+.form-area-input {
+    display: flex;
+    justify-content: space-evenly;
+    gap: 64px;
+}
+
+.form-area-buttons {
+    margin-top: 32px;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    /* flex-grow: 1; */
+}
+
+.form-row * {
+    display: block;
+}
+
+label {
+    margin-bottom: 4px;
+    text-align: left;
+}
