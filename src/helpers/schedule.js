@@ -118,7 +118,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 				console.log(hours);
 				try {
 					// start puppeteer
-					const browser = await puppeteer.launch({ headless: PUPPETEER_HEADLESS ? true : false });
+					const browser = await puppeteer.launch({ headless: preferences.puppeteerHeadless ? true : false });
 					const page = await browser.newPage();
 					await page.goto(URL_SCHEDULE);
 					// await page.waitForNavigation();
@@ -158,6 +158,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 
 async function finishSchedule(page, browser, users, hours, week, scheduleMethod, callback) {
 	try {
+		await page.waitForSelector('.ScheduleManagerLink');
 		await page.click('.ScheduleManagerLink');
 		const target = await browser.waitForTarget(target => target.opener() === page.target());
 
@@ -232,6 +233,8 @@ async function scheduleByAdding(schedulePage, hours) {
 }
 
 async function scheduleByArea(schedulePage, hours) {
+	console.log('Please do not hover over the interface'); // otherwise drag and drop will not work
+
 	const hoursAvailable = await schedulePage.evaluate(() => (
 		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
 	));
@@ -239,7 +242,12 @@ async function scheduleByArea(schedulePage, hours) {
 
 	let count = 0;
 	try {
-		// 1. schedule the whole week
+		// 0. find hours already scheduled
+		const previouslyScheduled = await schedulePage.evaluate(() => (
+			[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
+		));
+		
+		// 1. schedule the whole week simulating drag and drop
 		const { mouse } = schedulePage;
 
 		const cell1 = await schedulePage.$('#cell1');
@@ -279,6 +287,7 @@ async function scheduleByArea(schedulePage, hours) {
 							}
 						});
 						if (!hourWanted) {
+							if (previouslyScheduled.includes(`cell${i}`)) continue; // skip hours that were scheduled before scrapping
 							await schedulePage.click(`#cell${i}`);
 							await schedulePage.click('#butProviderUnschedule');
 							await sleep(1000);
