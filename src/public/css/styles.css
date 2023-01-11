@@ -50,12 +50,46 @@ input {
     padding: 10px 20px;
     border-radius: 5px;
     font-size: 1rem;
-    font-weight: 700;
+    /* font-weight: 700; */
     transition: all 0.3s ease;
 }
 
 input:focus {
     box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+select {
+    outline: none;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    /* font-weight: 700; */
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+option {
+    /* font-weight: 700; */
+}
+
+h1 {
+    color: var(--black-color-2);
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px solid var(--gray-color);
+    transition: all 0.3s ease;
+}
+
+.hidden {
+    display: none;
 }
 
 /* PARTIALS */
@@ -76,12 +110,20 @@ input:focus {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
-.navbar ul {
+.navbar-left {
     display: flex;
+    gap: 128px;
+    align-items: center;
     padding: 10px 40px;
 }
 
-.navbar ul a {
+.navbar ul {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+}
+
+.navbar a {
     color: var(--white-color);
 }
 

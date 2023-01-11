@@ -55,16 +55,22 @@ export function add(req, res) {
 					const date = new Date(sunday);
 					date.setDate(date.getDate() + i);
 					date.setHours(j);
+					
+					const year = date.getFullYear();
+					const month = date.getMonth() + 1;
+					const day = date.getDate();
+					const hours = date.getHours();
+
 					if (hour === 1) {
-						db.all(`SELECT * FROM Hour WHERE Year = ${date.getFullYear()} AND Month = ${date.getMonth() + 1} AND Day = ${date.getDate()} AND Hour = ${date.getHours()}`, (err, rows) => {
+						db.all(`SELECT * FROM Hour WHERE Year = ${year} AND Month = ${month} AND Day = ${day} AND Hour = ${hours}`, (err, rows) => {
 							if (err) {
 								console.log(err);
 							}
-							if (rows.length) { // hour already exists
+							if (rows?.length) { // hour already exists
 								count++;
 								if (count === 168) res.status(201).json({ message: 'OK' });
 							} else {
-								db.run(`INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${date.getFullYear()}, ${date.getMonth() + 1}, ${date.getDate()}, ${date.getHours()})`, err => {
+								db.run(`INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hours})`, err => {
 									if (err) {
 										console.log(err);
 									}
@@ -74,7 +80,7 @@ export function add(req, res) {
 							}
 						});
 					} else if (hour === 0) {
-						db.run(`DELETE FROM Hour WHERE Year = ${date.getFullYear()} AND Month = ${date.getMonth() + 1} AND Day = ${date.getDate()} AND Hour = ${date.getHours()}`, err => {
+						db.run(`DELETE FROM Hour WHERE Year = ${year} AND Month = ${month} AND Day = ${day} AND Hour = ${hours}`, err => {
 							if (err) {
 								console.log(err);
 							}
