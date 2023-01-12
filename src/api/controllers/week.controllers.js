@@ -5,18 +5,22 @@ import { schedule as sch } from '../../helpers/schedule.js';
 
 export function get(req, res) {
 	const { week } = req.params;
+	// console.log('week', week);
 
 	let date;
 
 	if (week === undefined) {
 		date = new Date();
 	} else if (!isNaN(week)) {
+		// console.log('a');
 		if(week < 0) {
 			return res.status(400).json({ message: 'Invalid week' });
 		}
 		date = new Date();
 		date.setDate(date.getDate() + week * 7);
+		// console.log('date', date);
 	} else {
+		console.log('b');
 		date = new Date(date.replace(/-/g, '/'));
 		if (date == 'Invalid Date') {
 			return res.status(400).json({ message: 'Invalid date' });
