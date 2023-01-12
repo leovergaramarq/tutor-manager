@@ -123,7 +123,7 @@ window.addEventListener('load', () => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: { week },
-                        timeout: 30000
+                        timeout: 60000
                     });
                     if (status !== 200) throw new Error(data.message);
                     alert('Horario agendado.\nPor favor revisar resultado en la web.\n\n' + data.message);
