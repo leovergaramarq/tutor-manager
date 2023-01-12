@@ -238,20 +238,32 @@ async function scheduleByArea(schedulePage, hours) {
 	const hoursAvailable = await schedulePage.evaluate(() => (
 		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
 	));
+	console.log('hoursAvailable', hoursAvailable);
 	if (!hoursAvailable) return 0;
 
-	let count = 0;
+	const getScheduledHours = () => (
+		[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
+	);
+	
 	try {
+		await schedulePage.waitForSelector('#cell0');
+		
 		// 0. find hours already scheduled
-		const previouslyScheduled = await schedulePage.evaluate(() => (
-			[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
-		));
+		const previouslyScheduled = await schedulePage.evaluate(getScheduledHours);
+		console.log('previouslyScheduled', previouslyScheduled);
 		
 		// 1. schedule the whole week simulating drag and drop
 		const { mouse } = schedulePage;
 
-		const cell1 = await schedulePage.$('#cell1');
-		const cell167 = await schedulePage.$('#cell167');
+		const isSaturday = new Date().getDay() === 6;
+
+		let sel = isSaturday ? '#cell1' : '#cell0';
+		await schedulePage.waitForSelector(sel);
+		const cell1 = await schedulePage.$(sel); // if saturday, area should not cover sundays
+		
+		sel = '#cell167';
+		await schedulePage.waitForSelector(sel);
+		const cell167 = await schedulePage.$(sel);
 
 		const box1 = await cell1.boundingBox();
 		const box167 = await cell167.boundingBox();
@@ -270,33 +282,38 @@ async function scheduleByArea(schedulePage, hours) {
 		}
 
 		// 2. unschedule the unwanted hours
-		for (let i = 0; i <= 167; i++) {
-			try {
-				const dayOfWeek = i % 7;
-				if (dayOfWeek !== 0) { // skip sundays
-					const filled = await schedulePage.$eval(`#cell${i}`, el => (
-						el.classList.contains('ui-selecting-finished-FILLED')
-					));
-					if (filled) {
-						const hourWanted = hours.find(({ Year, Month, Day, Hour }) => {
-							if (Year) { // using table Hour
-								const date = new Date(`${Year}/${Month}/${Day}`);
-								return date.getDay() === dayOfWeek && Hour === Math.floor(i / 7);
-							} else {
-								return Day === dayOfWeek && Hour === Math.floor(i / 7);
-							}
-						});
-						if (!hourWanted) {
-							if (previouslyScheduled.includes(`cell${i}`)) continue; // skip hours that were scheduled before scrapping
-							await schedulePage.click(`#cell${i}`);
-							await schedulePage.click('#butProviderUnschedule');
-							await sleep(1000);
-						} else {
-							count++; // count the hours that are already scheduled
-							hourWanted.scheduled = true;
-						}
-					}
+		const scheduled = await schedulePage.evaluate(getScheduledHours); // get the hours scheduled after step 1
+		console.log('scheduled', scheduled);
+
+		const toUnschedule = scheduled.filter(id => {
+			// 1. skip hours previously scheduled
+			if (previouslyScheduled.includes(id)) return false;
+
+			// 2. skip sundays if saturday
+			const cellNum = +id.split('cell')[1];
+			const dayOfWeek = cellNum % 7;
+			if (isSaturday && dayOfWeek === 0) return false;
+
+			// 3. skip hours not wanted
+			const hourWanted = hours.find(({ Year, Month, Day, Hour }) => {
+				if (Year) { // using table Hour
+					const date = new Date(`${Year}/${Month}/${Day}`);
+					return date.getDay() === dayOfWeek && Hour === Math.floor(cellNum / 7);
+				} else {
+					return Day === dayOfWeek && Hour === Math.floor(cellNum / 7);
 				}
+			});
+			if (hourWanted) hourWanted.scheduled = true; // mark as scheduled
+			return !hourWanted;
+		});
+		console.log('toUnschedule', toUnschedule);
+
+		for (let i = 0; i < toUnschedule.length; i++) {
+			try {
+				await schedulePage.click('#' + toUnschedule[i]);
+				await schedulePage.click('#butProviderUnschedule');
+				await sleep(1000);
+				// await schedulePage.waitForNavigation();
 			} catch (err) {
 				console.log(err);
 			}
@@ -305,10 +322,12 @@ async function scheduleByArea(schedulePage, hours) {
 		console.log(err);
 	}
 
-	if (count < hours.length) {
-		// 3. schedule the missing hours
+	const unscheduled = hours.filter(hour => !hour.scheduled);
+	let count = hours.length - unscheduled.length;
+	if (unscheduled.length) {
+		// schedule the missing hours
 		console.log('Scheduling the missing hours...');
-		count += await scheduleByAdding(schedulePage, hours.filter(hour => !hour.scheduled));
+		count += await scheduleByAdding(schedulePage, unscheduled);
 	}
 
 	return count;
