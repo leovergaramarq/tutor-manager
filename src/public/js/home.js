@@ -123,7 +123,7 @@ window.addEventListener('load', () => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: { week },
-                        timeout: 60000
+                        timeout: 60000 // 1 minute
                     });
                     if (status !== 200) throw new Error(data.message);
                     alert('Horario agendado.\nPor favor revisar resultado en la web.\n\n' + data.message);
@@ -195,12 +195,11 @@ function updateHeader() {
 async function fetchCalendar() {
     try {
         const { status, data } = await fetch('/api/week/' + week);
-        if (status === 200) {
-            // data[6][23] = 1; // test
-            // console.log(data);
-            weekMatrix = data;
-            updateCalendar();
-        }
+        if (status !== 200) throw new Error(data.message);
+        // data[6][23] = 1; // test
+        // console.log(data);
+        weekMatrix = data;
+        updateCalendar();
     } catch (err) {
         console.error(err);
     }

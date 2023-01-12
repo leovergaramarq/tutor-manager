@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
 import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
+import sleep from './sleep.js';
 import { getWeekBounds } from './week.js';
 
 export default function setSchedule() {
@@ -79,9 +80,8 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 				return res.status(500).json({ message: err.message });
 			}
 			if (users.length !== 1) {
-				console.log('Users found: ' + users.length);
 				if (callback) callback(401, 'User not found.');
-				return;
+				return console.log('Users found: ' + users.length);
 			}
 
 			const { scheduleDelay, scheduleMethod, schedulePreferredHours } = preferences;
@@ -120,7 +120,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 					// start puppeteer
 					const browser = await puppeteer.launch({ headless: preferences.puppeteerHeadless ? true : false });
 					const page = await browser.newPage();
-					await page.goto(URL_SCHEDULE);
+					await page.goto(URL_SCHEDULE, { timeout: 0 });
 					// await page.waitForNavigation();
 					await sleep(1000);
 
@@ -331,10 +331,6 @@ async function scheduleByArea(schedulePage, hours) {
 	}
 
 	return count;
-}
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule) {

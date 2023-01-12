@@ -1,0 +1,86 @@
+@import url('base.css');
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    height: 100vh;
+    background-color: var(--quaternary-color);
+    margin-top: 50px;
+    padding: 32px 48px;
+    text-align: center;
+}
+
+section {
+    padding: 16px 64px 32px 64px;
+    background-color: var(--white-color-2);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+    font-size: 1.3rem;
+    text-align: left;
+}
+
+.area-calculation {
+    font-size: 1.2rem;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+}
+
+.equals::after {
+    content: '=';
+    margin: 0 8px;
+}
+
+.plus::after {
+    content: '+';
+    margin: 0 2px;
+}
+
+.minus::after {
+    content: '-';
+    margin: 0 2px;
+}
+
+.times::after {
+    content: '⋅';
+    /* margin: 0 2px; */
+}
+
+input {
+    max-width: 100px;
+    padding: 0;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+input::placeholder {
+    font-size: 0.8rem;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.result {
+    font-size: 1.5rem;
+    min-width: 200px;
+}
+
+/* .section-buttons {
+    margin-top: 32px;
+} */

@@ -1,7 +1,6 @@
 @import url('base.css');
 
 main {
-    position: relative;
     height: 100vh;
     background-color: var(--quaternary-color);
     margin-top: 50px;
@@ -10,7 +9,12 @@ main {
 }
 
 .container {
+    padding: 32px 64px;
     padding-top: 8px;
+    margin: 16px auto;
+    background-color: var(--white-color-2);
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+    width: fit-content;
 }
 
 h1 {
@@ -18,11 +22,7 @@ h1 {
 }
 
 form {
-    padding: 32px 64px;
-    margin: 16px auto;
-    background-color: var(--white-color-2);
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
-    width: fit-content;
+    margin-top: 32px;
 }
 
 .form-area-input {

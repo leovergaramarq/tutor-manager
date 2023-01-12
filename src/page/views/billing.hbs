@@ -1,1 +1,110 @@
-schedule
+{{> navbar }}
+<main>
+    <section class="section-payment">
+        <h1>Pago</h1>
+        <div class="area-calculation">
+            <div class="row">
+                <span class="step">
+                    <span class="fraction">
+                        <span class="numerator">
+                            <span class="value">2.5</span>
+                            <span class="times"></span>
+                            <span class="value">
+                                <input type="number" id="minutesWaiting" placeholder="minutesWaiting">
+                            </span>
+                            <span class="plus"></span>
+                            <span class="value">
+                                <input type="number" id="usdPerHour" placeholder="hour" value="5">
+                            </span>
+                            <span class="times"></span>
+                            <span class="value">
+                                <input type="number" id="minutesInSession" placeholder="minutesInSession">
+                            </span>
+                        </span>
+                        <hr>
+                        <span class="denominator">
+                            <span class="value">60</span>
+                        </span>
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="payment-result1" readonly>
+                        USD
+                    </span>
+                </span>
+            </div>
+            <div class="row">
+                <span class="step">
+                    <span class="value">
+                        <input type="number" readonly class="payment-result1">
+                    </span>
+                    <span class="plus"></span>
+                    <span class="value">
+                        <input type="number" readonly placeholder="bonus" id="bonus">
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="payment-result2" readonly>
+                        USD
+                    </span>
+                </span>
+            </div>
+            <div class="row">
+                <span class="step">
+                    <span class="value">
+                        <input type="number" readonly class="payment-result2">
+                    </span>
+                    <span class="times"></span>
+                    <span class="value">
+                        <input type="number" id="usd" value="4700" placeholder="usd">
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="payment-result3 result" readonly>
+                        COP
+                    </span>
+                </span>
+            </div>
+        </div>
+    </section>
+    <section class="section-time">
+        <h1>Tiempo Trabajado</h1>
+        <div class="area-calculation">
+            <div class="row">
+                <span class="step">
+                    <span class="fraction">
+                        <span class="numerator">
+                            <span class="value">
+                                <input type="number" id="onlineHours" placeholder="onlineHours">
+                            </span>
+                        </span>
+                        <hr>
+                        <span class="denominator">
+                            <span class="value">
+                                <input type="number" id="scheduledHours" placeholder="scheduledHours">
+                            </span>
+                        </span>
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="time-result" readonly>
+                        %
+                    </span>
+                </span>
+            </div>
+        </div>
+    </section>
+    <div class="section-buttons">
+        <button class="btn-secondary">Restablecer</button>
+        <button class="btn-primary">Actualizar</button>
+    </div>
+</main>
+<script type="module" src="/js/billing.js"></script>
