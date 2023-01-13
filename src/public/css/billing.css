@@ -37,6 +37,7 @@ h1 {
 .step {
     display: flex;
     align-items: center;
+    margin-top: 8px;
 }
 
 .equals::after {
@@ -67,7 +68,7 @@ input {
 }
 
 input::placeholder {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
 }
 
 input::-webkit-outer-spin-button,

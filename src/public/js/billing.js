@@ -11,6 +11,25 @@ window.addEventListener('load', async function () {
         recalculateTime();
         if (e.target.id = 'onlineHours') recalculatePayment(); // recalculate payment if online hours change (bonus might change)
     });
+    
+    document.querySelector('.section-buttons').addEventListener('click', e => {
+        const { id } = e.target;
+        if (id === 'reset') {
+            // console.log(data);
+            // console.log(usd);
+            const { minutesWaiting, minutesInSession, scheduledHours, onlineHours } = data;
+            $minutesWaiting.value = minutesWaiting;
+            $minutesInSession.value = minutesInSession;
+            $scheduledHours.value = scheduledHours;
+            $onlineHours.value = onlineHours;
+            $usd.value = usd;
+            recalculatePayment();
+            recalculateTime();
+        } else if (id === 'refresh') {
+            fetchData();
+            fetchUSD();
+        }
+    });
 });
 
 async function fetchData() {
@@ -21,6 +40,7 @@ async function fetchData() {
         data = json;
     } catch (err) {
         console.log(err);
+        return alert('Error fetching data');
     }
     // data = {
     //     scheduledHours: Math.floor(Math.random() * 100),
@@ -36,23 +56,25 @@ async function fetchData() {
     $scheduledHours.value = scheduledHours;
     $onlineHours.value = onlineHours;
 
-    recalculatePayment();
+    if (usd !== undefined) recalculatePayment();
     recalculateTime();
 }
 
 async function fetchUSD() {
-    // try {
-    //     const { status, data } = await fetch('/api/usd');
-    //     if (status !== 200) throw new Error(data.message);
-    //     console.log(data);
-    //     usd = data.usd;
-    // } catch (err) {
-    //     console.log(err);
-    // }
+    try {
+        const { status, data } = await fetch('/api/usd');
+        if (status !== 200) throw new Error(data.message);
+        console.log(data);
+        usd = +data.usd.toFixed(1);
+    } catch (err) {
+        console.log(err);
+        return alert('Error fetching USD');
+    }
     
-    usd = 4700;
+    // usd = 4700;
 
     $usd.value = usd;
+    if (data !== undefined) recalculatePayment();
 }
 
 function recalculatePayment() {
@@ -61,10 +83,6 @@ function recalculatePayment() {
 
     const bonus = getBonus();
     $bonus.value = bonus;
-    // console.log(res);
-    // console.log(typeof res);
-    // console.log(bonus);
-    // console.log(res + bonus);
     res += getBonus();
     $paymentResult2.forEach(el => (el.value = res));
 
