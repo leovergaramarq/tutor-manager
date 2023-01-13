@@ -168,6 +168,9 @@ async function finishSchedule(page, hours, week, scheduleMethod, callback) {
 		if (!(await page.$('#lblAvailableHours'))) { // continue login
 			newLogin = true;
 			await page.click('#butSignIn');
+		} else {
+			// refresh page
+			await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
 		}
 
 		if (week === 1) {
@@ -181,7 +184,7 @@ async function finishSchedule(page, hours, week, scheduleMethod, callback) {
 		await page.waitForSelector('#lblAvailableHours'); // wait for the page to load
 
 		const count = scheduleMethod === 0 ? await scheduleByAdding(page, hours) : await scheduleByArea(page, hours);
-		callback(200, `Scheduled ${count}/${hours.length} hours.`);
+		if(callback) callback(200, `Scheduled ${count}/${hours.length} hours.`);
 		console.log(`Scheduled ${count}/${hours.length} hours.`);
 		const cookies = await page.cookies();
 		if (newLogin) saveCookies(cookies);
