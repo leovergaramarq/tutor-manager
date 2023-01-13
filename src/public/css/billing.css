@@ -1,5 +1,9 @@
 @import url('base.css');
 
+html {
+    position: relative;
+}
+
 main {
     display: flex;
     flex-direction: column;

@@ -1,10 +1,11 @@
 import fetch from './fetch.js';
+import { showLoading, hideLoading } from './utils.js';
 
 window.addEventListener('load', async function () {
     initSelectors();
 
-    fetchData();
-    fetchUSD();
+    showLoading();
+    Promise.all([fetchData(), fetchUSD()]).then(hideLoading).catch(err => console.error(err));
 
     document.querySelector('.section-payment').addEventListener('input', recalculatePayment);
     document.querySelector('.section-time').addEventListener('input', e => {
@@ -17,12 +18,15 @@ window.addEventListener('load', async function () {
         if (id === 'reset') {
             // console.log(data);
             // console.log(usd);
-            const { minutesWaiting, minutesInSession, scheduledHours, onlineHours } = data;
-            $minutesWaiting.value = minutesWaiting;
-            $minutesInSession.value = minutesInSession;
-            $scheduledHours.value = scheduledHours;
-            $onlineHours.value = onlineHours;
-            $usd.value = usd;
+            if (data) {
+                const { minutesWaiting, minutesInSession, scheduledHours, onlineHours } = data;
+                $minutesWaiting.value = minutesWaiting;
+                $minutesInSession.value = minutesInSession;
+                $scheduledHours.value = scheduledHours;
+                $onlineHours.value = onlineHours;
+            }
+            if(usd) $usd.value = usd;
+            
             recalculatePayment();
             recalculateTime();
         } else if (id === 'refresh') {
@@ -61,17 +65,17 @@ async function fetchData() {
 }
 
 async function fetchUSD() {
-    // try {
-    //     const { status, data } = await fetch('/api/usd');
-    //     if (status !== 200) throw new Error(data.message);
-    //     console.log(data);
-    //     usd = +data.usd.toFixed(1);
-    // } catch (err) {
-    //     console.log(err);
-    //     return alert('Error fetching USD');
-    // }
+    try {
+        const { status, data } = await fetch('/api/usd');
+        if (status !== 200) throw new Error(data.message);
+        console.log(data);
+        usd = +data.usd.toFixed(1);
+    } catch (err) {
+        console.log(err);
+        return alert('Error fetching USD');
+    }
     
-    usd = 4700;
+    // usd = 4700;
 
     $usd.value = usd;
     if (data !== undefined) recalculatePayment();

@@ -72,10 +72,6 @@ select:focus {
     box-shadow: 0 0 0 2px var(--primary-color);
 }
 
-option {
-    /* font-weight: 700; */
-}
-
 h1 {
     color: var(--black-color-2);
 }
@@ -106,7 +102,7 @@ input[type="checkbox"] {
     background-color: var(--primary-color);
     color: var(--white-color);
     font-size: 1.2rem;
-    z-index: 999;
+    z-index: 10;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -188,4 +184,50 @@ input[type="checkbox"] {
 
 .calendar tbody .cell.selected {
     background-color: var(--green-color);
+}
+
+.loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 100;
+}
+
+.loading-backdrop {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    background-color: var(--gray-color-3);
+    opacity: 0.5;
+}
+
+.loading-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.loading-animation>span {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    animation: loader-animation 0.5s ease-in-out infinite alternate;
+}
+
+.loading-animation>span:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+@keyframes loader-animation {
+    to {
+        opacity: 1;
+        transform: translate3d(0, -1rem, 0);
+    }
 }
