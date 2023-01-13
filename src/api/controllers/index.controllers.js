@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
 import sleep from '../../helpers/sleep.js';
 import { DB_PATH, URL_BILLING, URL_RATING, URL_USD } from '../../constants.js';
+import { save as saveCookies } from '../../helpers/cookies.js';
 
 export function hello(_, res) {
 	db.serialize(() => {
@@ -33,7 +34,7 @@ export function login(req, res) {
 						console.log(err);
 						return res.status(500).json({ message: err.message });
 					}
-					res.status(201).json({ message: 'Logged in successfully'});
+					res.status(201).json({ message: 'Logged in successfully' });
 				});
 			} else if (users.length > 1) {
 				db.run('DELETE FROM User', err => {
@@ -46,7 +47,7 @@ export function login(req, res) {
 							console.log(err);
 							return res.status(500).json({ message: err.message });
 						}
-						res.status(201).json({ message: 'Logged in successfully'});
+						res.status(201).json({ message: 'Logged in successfully' });
 					});
 				});
 			} else {
@@ -56,10 +57,10 @@ export function login(req, res) {
 							console.log(err);
 							return res.status(500).json({ message: err.message });
 						}
-						res.status(201).json({ message: 'Logged in successfully'});
+						res.status(201).json({ message: 'Logged in successfully' });
 					});
 				} else {
-					return res.status(201).json({ message: 'Logged in successfully'});
+					return res.status(201).json({ message: 'Logged in successfully' });
 				}
 			}
 		});
@@ -73,7 +74,7 @@ export function logout(req, res) {
 				console.log(err);
 				return res.status(500).json({ message: err.message });
 			}
-			res.status(201).json({ message: 'Logged out successfully'});
+			res.status(201).json({ message: 'Logged out successfully' });
 		});
 	});
 }
@@ -94,31 +95,40 @@ export function billing(req, res) {
 				// const browser = await puppeteer.launch({ headless: false });
 				const browser = await puppeteer.launch();
 				const page = await browser.newPage();
+				if (users[0].Cookies) {
+					await page.setCookie(...JSON.parse(users[0].Cookies));
+				}
 				await page.goto(URL_BILLING, { timeout: 0 });
 				// await page.waitForNavigation();
-				await sleep(500);
+				await sleep(1000);
 
-				await page.waitForSelector('#butSignIn');
-				await page.type('#txtUserName', users[0].Username);
-				await page.type('#txtPassword', users[0].Password);
-				await sleep(500);
-				await page.click('#butSignIn');
-				
-				await page.waitForSelector('table');
+				let newLogin;
+				if (!await page.$('#otherPanel')) {
+					console.log('No hay cookies');
+					newLogin = true;
 
-				const data = await page.$eval('tr:nth-child(2)', el => {
-					console.log(el);
-					return {
-						scheduledHours: +el.children[2].innerText,
-						onlineHours: +el.children[3].innerText,
-						minutesWaiting: +el.children[8].innerText.replace(/,/g, ''),
-						minutesInSession: +el.children[9].innerText.replace(/,/g, '')
-					}
-				});
+					await page.waitForSelector('#butSignIn');
+					await page.type('#txtUserName', users[0].Username);
+					await page.type('#txtPassword', users[0].Password);
+					await sleep(500);
+					await page.click('#butSignIn');
+					// await sleep(500);
+					// await page.waitForNavigation();
+				}
+				await page.waitForSelector('#otherPanel');
+
+				const data = await page.$eval('tr:nth-child(2)', el => ({
+					scheduledHours: +el.children[2].innerText,
+					onlineHours: +el.children[3].innerText,
+					minutesWaiting: +el.children[8].innerText.replace(/,/g, ''),
+					minutesInSession: +el.children[9].innerText.replace(/,/g, '')
+				}));
 
 				res.status(200).json(data);
+				const cookies = await page.cookies();
 				await browser.close();
 
+				if (newLogin) saveCookies(cookies);
 			} catch (err) {
 				console.log(err);
 				res.status(500).json({ message: err.message });
@@ -152,11 +162,11 @@ export function rating(req, res) {
 				await page.type('#txtPassword', users[0].Password);
 				await sleep(500);
 				await page.click('#butSignIn');
-				
+
 				await page.waitForSelector('table');
 
 				return res.status(200).json({ message: 'ok' });
-				
+
 				const data = await page.$eval('tr:nth-child(2)', el => {
 					console.log(el);
 					return {

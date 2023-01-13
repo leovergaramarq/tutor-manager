@@ -8,6 +8,7 @@ export default function initDB(callback) {
                 "UserID"	INTEGER NOT NULL UNIQUE,
                 "Username"	TEXT NOT NULL UNIQUE,
                 "Password"	TEXT NOT NULL,
+                "Cookies"	TEXT,
                 PRIMARY KEY("UserID" AUTOINCREMENT),
                 UNIQUE("Username")
             );

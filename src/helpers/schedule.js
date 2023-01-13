@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
 import { DB_PATH, URL_SCHEDULE } from '../constants.js';
 import { defPreferences } from './preferences.js';
+import { save as saveCookies } from './cookies.js';
 import sleep from './sleep.js';
 import { getWeekBounds } from './week.js';
 
@@ -50,8 +51,8 @@ export default function setSchedule() {
 			}, (dateSched - date) - scheduleAnticipation);
 
 			const milisToSched = (dateSched - date) - scheduleAnticipation;
-			
-			if(milisToSched <= 0) {
+
+			if (milisToSched <= 0) {
 				console.log('Scheduling now...');
 			} else {
 				const days = milisToSched / 86400000;
@@ -69,7 +70,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 		if (callback) callback(400, 'Invalid week.');
 		return;
 	}
-	
+
 	console.log('Scheduling...');
 	clearTimeout(timeoutFinishSched);
 
@@ -86,17 +87,18 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 
 			const { scheduleDelay, scheduleMethod, schedulePreferredHours } = preferences;
 
-			db.all(schedulePreferredHours ? 'SELECT * FROM PreferredHour' : 'SELECT * FROM Hour' , async (err, hours) => {
+			db.all(schedulePreferredHours ? 'SELECT * FROM PreferredHour' : 'SELECT * FROM Hour', async (err, hours) => {
 				if (err) {
 					console.log(err);
 					return res.status(500).json({ message: err.message });
 				}
+				// console.log(hours);
 				// get hours for the week
 				const now = new Date();
 				const [sunday, saturday] = getWeekBounds(new Date(now.getTime() + week * 604800000)); // 604800000 = 7 days in case week is 1
 
 				// filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
-				if(schedulePreferredHours === 0) {
+				if (schedulePreferredHours === 0) {
 					hours = hours.filter(({ Year, Month, Day, Hour }) => {
 						const hourToSched = new Date(`${Year}/${Month}/${Day} ${Hour}:00`);
 						return hourToSched >= sunday && hourToSched <= saturday && hourToSched >= now;
@@ -111,7 +113,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 				}
 
 				if (!hours.length) {
-					if (callback) callback(204, 'No hours found.');
+					if (callback) callback(200, 'No hours found.');
 					return;
 				}
 
@@ -120,16 +122,19 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 					// start puppeteer
 					const browser = await puppeteer.launch({ headless: preferences.puppeteerHeadless ? true : false });
 					const page = await browser.newPage();
+					if (users[0].Cookies) {
+						await page.setCookie(...JSON.parse(users[0].Cookies));
+					}
 					await page.goto(URL_SCHEDULE, { timeout: 0 });
 					// await page.waitForNavigation();
 					await sleep(1000);
 
-					if (!(await page.$('.ScheduleManagerLink'))) { //if not logged in
-						await page.waitForSelector('#ctl00_ctl00_phContentMain_phContentMain_btnSubmit');
-						await page.type('#ctl00_ctl00_phContentMain_phContentMain_tbxUser', users[0].Username);
-						await page.type('#ctl00_ctl00_phContentMain_phContentMain_tbxPass', users[0].Password);
-						await sleep(1000);
-						await page.click('#ctl00_ctl00_phContentMain_phContentMain_btnSubmit');
+					if (!(await page.$('#lblAvailableHours'))) { // if need to login again
+						console.log('Logging in again...');
+						await page.waitForSelector('#butSignIn');
+						await page.type('#txtUserName', users[0].Username);
+						await page.type('#txtPassword', users[0].Password);
+						await sleep(500);
 						// await page.waitForNavigation();
 					}
 
@@ -141,11 +146,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 						// clearTimeout(timeoutFinishSched);
 						timeoutFinishSched = setTimeout(() => {
 							timeoutFinishSched = null;
-							finishSchedule(page, browser, users, hours, week, scheduleMethod, callback);
+							finishSchedule(page, hours, week, scheduleMethod, callback);
 						}, (dateSched - date) + scheduleDelay);
 
 					} else { // schedule immediately
-						finishSchedule(page, browser, users, hours, week, scheduleMethod, callback);
+						finishSchedule(page, hours, week, scheduleMethod, callback);
 					}
 				} catch (err) {
 					console.log(err);
@@ -156,47 +161,37 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 	});
 }
 
-async function finishSchedule(page, browser, users, hours, week, scheduleMethod, callback) {
+async function finishSchedule(page, hours, week, scheduleMethod, callback) {
 	try {
-		await page.waitForSelector('.ScheduleManagerLink');
-		await page.click('.ScheduleManagerLink');
-		const target = await browser.waitForTarget(target => target.opener() === page.target());
-
-		// get the new page
-		const schedulePage = await target.page();
-		console.log(schedulePage.url());
-
-		if (!(await schedulePage.$('#cell0'))) { // if need to login again
-			console.log('Logging in again...');
-			await schedulePage.waitForSelector('#butSignIn');
-			await schedulePage.type('#txtUserName', users[0].Username);
-			await schedulePage.type('#txtPassword', users[0].Password);
-			await sleep(1000);
-			await schedulePage.click('#butSignIn');
-			// await schedulePage.waitForNavigation();
+		let newLogin;
+		// if (!(await page.$('#cell0'))) { // continue login
+		if (!(await page.$('#lblAvailableHours'))) { // continue login
+			newLogin = true;
+			await page.click('#butSignIn');
 		}
 
 		if (week === 1) {
-			await schedulePage.waitForSelector('[name="weekAhead"]');
-			await sleep(1000);
-			await schedulePage.click('[name="weekAhead"]');
-			// await schedulePage.waitForNavigation();
+			await page.waitForSelector('[name="weekAhead"]');
+			await sleep(500);
+			await page.click('[name="weekAhead"]');
+			// await page.waitForNavigation();
 			await sleep(1000);
 		}
 
-		await schedulePage.waitForSelector('#lblAvailableHours'); // wait for the page to load
+		await page.waitForSelector('#lblAvailableHours'); // wait for the page to load
 
-		const count = scheduleMethod === 0 ? await scheduleByAdding(schedulePage, hours) : await scheduleByArea(schedulePage, hours);
+		const count = scheduleMethod === 0 ? await scheduleByAdding(page, hours) : await scheduleByArea(page, hours);
 		callback(200, `Scheduled ${count}/${hours.length} hours.`);
 		console.log(`Scheduled ${count}/${hours.length} hours.`);
-
+		const cookies = await page.cookies();
+		if (newLogin) saveCookies(cookies);
 	} catch (err) {
 		console.log(err);
 	}
 }
 
-async function scheduleByAdding(schedulePage, hours) {
-	const hoursAvailable = await schedulePage.evaluate(() => (
+async function scheduleByAdding(page, hours) {
+	const hoursAvailable = await page.evaluate(() => (
 		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
 	));
 	if (!hoursAvailable) return 0;
@@ -209,19 +204,19 @@ async function scheduleByAdding(schedulePage, hours) {
 			const dayOfWeek = Year ? new Date(`${Year}/${Month}/${Day}`).getDay() : Day; // if !Year then using table PreferredHour (Day is the day of week)
 
 			const sel = `#cell${dayOfWeek + 7 * Hour}`;
-			await schedulePage.waitForSelector(sel);
-			const available = await schedulePage.$eval(sel, el => (
+			await page.waitForSelector(sel);
+			const available = await page.$eval(sel, el => (
 				el.classList.contains('ui-selecting-finished-OPERATING')
 			));
 
 			console.log(`${dayOfWeek} ${Hour}:00 - available: ${available}`);
 			if (available) {
-				await schedulePage.click(sel);
-				await schedulePage.click('#butProviderSchedule');
+				await page.click(sel);
+				await page.click('#butProviderSchedule');
 				await sleep(1000);
-				// await schedulePage.waitForNavigation();
+				// await page.waitForNavigation();
 
-				count += await schedulePage.$eval(sel, el => (
+				count += await page.$eval(sel, el => (
 					el.classList.contains('ui-selecting-finished-FILLED')
 				));
 			}
@@ -232,10 +227,10 @@ async function scheduleByAdding(schedulePage, hours) {
 	return count;
 }
 
-async function scheduleByArea(schedulePage, hours) {
+async function scheduleByArea(page, hours) {
 	console.log('Please do not hover over the interface'); // otherwise drag and drop will not work
 
-	const hoursAvailable = await schedulePage.evaluate(() => (
+	const hoursAvailable = await page.evaluate(() => (
 		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
 	));
 	console.log('hoursAvailable', hoursAvailable);
@@ -244,26 +239,26 @@ async function scheduleByArea(schedulePage, hours) {
 	const getScheduledHours = () => (
 		[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
 	);
-	
+
 	try {
-		await schedulePage.waitForSelector('#cell0');
-		
+		await page.waitForSelector('#cell0');
+
 		// 0. find hours already scheduled
-		const previouslyScheduled = await schedulePage.evaluate(getScheduledHours);
+		const previouslyScheduled = await page.evaluate(getScheduledHours);
 		console.log('previouslyScheduled', previouslyScheduled);
-		
+
 		// 1. schedule the whole week simulating drag and drop
-		const { mouse } = schedulePage;
+		const { mouse } = page;
 
 		const isSaturday = new Date().getDay() === 6;
 
 		let sel = isSaturday ? '#cell1' : '#cell0';
-		await schedulePage.waitForSelector(sel);
-		const cell1 = await schedulePage.$(sel); // if saturday, area should not cover sundays
-		
+		await page.waitForSelector(sel);
+		const cell1 = await page.$(sel); // if saturday, area should not cover sundays
+
 		sel = '#cell167';
-		await schedulePage.waitForSelector(sel);
-		const cell167 = await schedulePage.$(sel);
+		await page.waitForSelector(sel);
+		const cell167 = await page.$(sel);
 
 		const box1 = await cell1.boundingBox();
 		const box167 = await cell167.boundingBox();
@@ -273,16 +268,16 @@ async function scheduleByArea(schedulePage, hours) {
 		await mouse.move(box167.x + box167.width / 2, box167.y + box167.height / 2);
 		await mouse.up();
 
-		const available = await schedulePage.$eval('#butProviderSchedule', el => !el.disabled);
+		const available = await page.$eval('#butProviderSchedule', el => !el.disabled);
 
 		if (available) {
-			await schedulePage.click('#butProviderSchedule');
+			await page.click('#butProviderSchedule');
 			console.log('Scheduling the whole week... (5s)');
 			await sleep(5000);
 		}
 
 		// 2. unschedule the unwanted hours
-		const scheduled = await schedulePage.evaluate(getScheduledHours); // get the hours scheduled after step 1
+		const scheduled = await page.evaluate(getScheduledHours); // get the hours scheduled after step 1
 		console.log('scheduled', scheduled);
 
 		const toUnschedule = scheduled.filter(id => {
@@ -310,10 +305,10 @@ async function scheduleByArea(schedulePage, hours) {
 
 		for (let i = 0; i < toUnschedule.length; i++) {
 			try {
-				await schedulePage.click('#' + toUnschedule[i]);
-				await schedulePage.click('#butProviderUnschedule');
+				await page.click('#' + toUnschedule[i]);
+				await page.click('#butProviderUnschedule');
 				await sleep(1000);
-				// await schedulePage.waitForNavigation();
+				// await page.waitForNavigation();
 			} catch (err) {
 				console.log(err);
 			}
@@ -327,7 +322,7 @@ async function scheduleByArea(schedulePage, hours) {
 	if (unscheduled.length) {
 		// schedule the missing hours
 		console.log('Scheduling the missing hours...');
-		count += await scheduleByAdding(schedulePage, unscheduled);
+		count += await scheduleByAdding(page, unscheduled);
 	}
 
 	return count;
