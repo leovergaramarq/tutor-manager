@@ -186,9 +186,18 @@ export async function usd(req, res) {
 		const page = await browser.newPage();
 		await page.goto(URL_USD, { timeout: 0 });
 		// await page.waitForNavigation();
-		await sleep(500);
+		// await sleep(500);
 
-		return res.status(200).json({ message: 'ok' });
+		// return res.status(200).json({ message: 'ok' });
+
+		const sel = '.YMlKec.fxKbKc';
+		await page.waitForSelector(sel);
+		const data = await page.$eval(sel, el => ({
+			usd: +el.innerText.replace(/,/g, '')
+		}));
+
+		res.status(200).json(data);
+		// await browser.close();
 
 	} catch (err) {
 		console.log(err);

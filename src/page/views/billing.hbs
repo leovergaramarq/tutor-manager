@@ -10,15 +10,15 @@
                             <span class="value">2.5</span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesWaiting" placeholder="minutesWaiting">
+                                <input type="number" id="minutesWaiting" placeholder="Minutos de espera">
                             </span>
                             <span class="plus"></span>
                             <span class="value">
-                                <input type="number" id="usdPerHour" placeholder="hour" value="5">
+                                <input type="number" id="usdPerHour" placeholder="Pago por hora" value="5">
                             </span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesInSession" placeholder="minutesInSession">
+                                <input type="number" id="minutesInSession" placeholder="Minutos en sesión">
                             </span>
                         </span>
                         <hr>
@@ -42,7 +42,7 @@
                     </span>
                     <span class="plus"></span>
                     <span class="value">
-                        <input type="number" readonly placeholder="bonus" id="bonus">
+                        <input type="number" readonly placeholder="Bonus" id="bonus">
                     </span>
                 </span>
                 <span class="equals"></span>
@@ -60,7 +60,7 @@
                     </span>
                     <span class="times"></span>
                     <span class="value">
-                        <input type="number" id="usd" value="4700" placeholder="usd">
+                        <input type="number" id="usd" placeholder="Precio dólar">
                     </span>
                 </span>
                 <span class="equals"></span>
@@ -81,13 +81,13 @@
                     <span class="fraction">
                         <span class="numerator">
                             <span class="value">
-                                <input type="number" id="onlineHours" placeholder="onlineHours">
+                                <input type="number" id="onlineHours" placeholder="Horas online">
                             </span>
                         </span>
                         <hr>
                         <span class="denominator">
                             <span class="value">
-                                <input type="number" id="scheduledHours" placeholder="scheduledHours">
+                                <input type="number" id="scheduledHours" placeholder="Horas agendadas">
                             </span>
                         </span>
                     </span>
@@ -103,8 +103,8 @@
         </div>
     </section>
     <div class="section-buttons">
-        <button class="btn-secondary">Restablecer</button>
-        <button class="btn-primary">Actualizar</button>
+        <button class="btn-secondary" id="reset">Restablecer</button>
+        <button class="btn-primary" id="refresh">Actualizar</button>
     </div>
 </main>
 <script type="module" src="/js/billing.js"></script>
