@@ -7,7 +7,7 @@ export function getWeekBounds(date = new Date()) {
     
     const saturday = new Date(date);
     saturday.setDate(date.getDate() + (6 - day));
-    saturday.setHours(0, 0, 0, 0);
+    saturday.setHours(23, 59, 59, 999);
     
     return [sunday, saturday];
 }

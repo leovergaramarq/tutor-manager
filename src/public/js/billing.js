@@ -61,17 +61,17 @@ async function fetchData() {
 }
 
 async function fetchUSD() {
-    try {
-        const { status, data } = await fetch('/api/usd');
-        if (status !== 200) throw new Error(data.message);
-        console.log(data);
-        usd = +data.usd.toFixed(1);
-    } catch (err) {
-        console.log(err);
-        return alert('Error fetching USD');
-    }
+    // try {
+    //     const { status, data } = await fetch('/api/usd');
+    //     if (status !== 200) throw new Error(data.message);
+    //     console.log(data);
+    //     usd = +data.usd.toFixed(1);
+    // } catch (err) {
+    //     console.log(err);
+    //     return alert('Error fetching USD');
+    // }
     
-    // usd = 4700;
+    usd = 4700;
 
     $usd.value = usd;
     if (data !== undefined) recalculatePayment();

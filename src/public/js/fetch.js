@@ -28,7 +28,7 @@ export default async function (url, options) {
 
             return {
                 status: res.status,
-                data: await (res.headers.get('content-type').includes('application/json') ? res.json() : res.text())
+                data: await (res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text())
             };
         } catch (err) {
             if (err instanceof DOMException) throw new Error('Request timed out');

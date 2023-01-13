@@ -21,7 +21,6 @@ router.use('/week', week);
 router.use('/preferences', preference);
 router.use('/preferredHours', preferredHour);
 
-
 router.use((_, res) => {
 	res.status(404).json({ message: 'Not found' });
 });
