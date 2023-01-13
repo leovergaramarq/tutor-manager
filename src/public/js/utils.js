@@ -42,3 +42,11 @@ export function getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineM
 
 	return dateSched;
 }
+
+export function showLoading() {
+    document.querySelector('.loading').classList.remove('hidden');
+}
+
+export function hideLoading() {
+    document.querySelector('.loading').classList.add('hidden');
+}
