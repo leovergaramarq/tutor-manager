@@ -113,7 +113,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 				}
 
 				if (!hours.length) {
-					if (callback) callback(200, 'No hours found.');
+					if (callback) callback(404, 'No hours found.');
 					return;
 				}
 
@@ -129,12 +129,15 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 					// await page.waitForNavigation();
 					await sleep(1000);
 
+					let newLogin;
 					if (!(await page.$('#lblAvailableHours'))) { // if need to login again
 						console.log('Logging in again...');
 						await page.waitForSelector('#butSignIn');
 						await page.type('#txtUserName', users[0].Username);
 						await page.type('#txtPassword', users[0].Password);
-						await sleep(500);
+						await sleep(100);
+						await page.click('#butSignIn');
+						newLogin = true;
 						// await page.waitForNavigation();
 					}
 
@@ -144,13 +147,22 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 						const date = new Date();
 
 						// clearTimeout(timeoutFinishSched);
-						timeoutFinishSched = setTimeout(() => {
+						timeoutFinishSched = setTimeout(async () => {
 							timeoutFinishSched = null;
-							finishSchedule(page, hours, week, scheduleMethod, callback);
+							if (week) { // if next week, click next week button
+								await page.waitForSelector('[name="weekAhead"]');
+								// await sleep(500);
+								await page.click('[name="weekAhead"]');
+								// await page.waitForNavigation();
+								await sleep(100);
+							} else { // otherwise, reload page
+								await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+							}
+							finishSchedule(page, hours, scheduleMethod, newLogin, callback);
 						}, (dateSched - date) + scheduleDelay);
 
 					} else { // schedule immediately
-						finishSchedule(page, hours, week, scheduleMethod, callback);
+						finishSchedule(page, hours, scheduleMethod, newLogin, callback);
 					}
 				} catch (err) {
 					console.log(err);
@@ -161,83 +173,61 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 	});
 }
 
-async function finishSchedule(page, hours, week, scheduleMethod, callback) {
+async function finishSchedule(page, hours, scheduleMethod, newLogin, callback) {
 	try {
-		let newLogin;
-		// if (!(await page.$('#cell0'))) { // continue login
-		if (!(await page.$('#lblAvailableHours'))) { // continue login
-			newLogin = true;
-			await page.click('#butSignIn');
-		} else {
-			// refresh page
-			await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
-		}
-
-		if (week === 1) {
-			await page.waitForSelector('[name="weekAhead"]');
-			await sleep(500);
-			await page.click('[name="weekAhead"]');
-			// await page.waitForNavigation();
-			await sleep(1000);
-		}
-
 		await page.waitForSelector('#lblAvailableHours'); // wait for the page to load
-
-		const count = scheduleMethod === 0 ? await scheduleByAdding(page, hours) : await scheduleByArea(page, hours);
-		if(callback) callback(200, `Scheduled ${count}/${hours.length} hours.`);
-		console.log(`Scheduled ${count}/${hours.length} hours.`);
-		const cookies = await page.cookies();
-		if (newLogin) saveCookies(cookies);
+		const hoursAvailable = await getHoursAvailable(page);
+		if (!hoursAvailable) {
+			if (callback) callback(404, 'No hours available.');
+			console.log('No hours available.');
+		} else {
+			const count = scheduleMethod === 0 ? await scheduleByAdding(page, hours) : await scheduleByArea(page, hours, hoursAvailable);
+			if (callback) callback(200, `Scheduled ${count}/${hours.length} hours.`);
+			console.log(`Scheduled ${count}/${hours.length} hours.`);
+		}
+		if (newLogin) saveCookies(await page.cookies());
 	} catch (err) {
 		console.log(err);
 	}
 }
 
 async function scheduleByAdding(page, hours) {
-	const hoursAvailable = await page.evaluate(() => (
-		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
+	const toSchedule = hours.map(({ Year, Month, Day, Hour }) => (
+		'cell' + ((Year ? new Date(`${Year}/${Month}/${Day}`).getDay() : Day) + 7 * Hour) // if !Year then using table PreferredHour (Day is the day of week)
 	));
-	if (!hoursAvailable) return 0;
 
 	let count = 0;
-	for (let i = 0; i < hours.length && count < hoursAvailable; i++) {
-		try {
-			const { Year, Month, Day, Hour } = hours[i];
-
-			const dayOfWeek = Year ? new Date(`${Year}/${Month}/${Day}`).getDay() : Day; // if !Year then using table PreferredHour (Day is the day of week)
-
-			const sel = `#cell${dayOfWeek + 7 * Hour}`;
-			await page.waitForSelector(sel);
-			const available = await page.$eval(sel, el => (
-				el.classList.contains('ui-selecting-finished-OPERATING')
-			));
-
-			console.log(`${dayOfWeek} ${Hour}:00 - available: ${available}`);
-			if (available) {
-				await page.click(sel);
-				await page.click('#butProviderSchedule');
-				await sleep(1000);
-				// await page.waitForNavigation();
-
-				count += await page.$eval(sel, el => (
-					el.classList.contains('ui-selecting-finished-FILLED')
-				));
-			}
-		} catch (err) {
-			console.log(err);
+	try {
+		await page.waitForSelector('#cell0');
+		const { keyboard } = page;
+		await keyboard.down('Control'); // hold control to select multiple hours
+		// await Promise.allSettled(toSchedule.map(id => page.click('#' + id)));
+		for (let i = 0; i < toSchedule.length; i++) {
+			try {
+				await page.click('#' + toSchedule[i]);
+			} catch (err) { }
 		}
+		await keyboard.up('Control');
+		const available = await page.$eval('#butProviderSchedule', el => !el.disabled);
+		if (available) {
+			await page.click('#butProviderSchedule');
+			await waitForSomeButton(page, 5000);
+		}
+
+		console.log('looking for scheduled hours...');
+		const scheduled = await page.evaluate(() => (
+			[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
+		));
+		console.log('scheduled', scheduled);
+		scheduled.forEach(id => toSchedule.includes(id) && count++);
+	} catch (err) {
+		console.log(err);
 	}
 	return count;
 }
 
-async function scheduleByArea(page, hours) {
+async function scheduleByArea(page, hours, hoursAvailable) {
 	console.log('Please do not hover over the interface'); // otherwise drag and drop will not work
-
-	const hoursAvailable = await page.evaluate(() => (
-		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
-	));
-	console.log('hoursAvailable', hoursAvailable);
-	if (!hoursAvailable) return 0;
 
 	const getScheduledHours = () => (
 		[...document.querySelectorAll('.ui-selecting-finished-FILLED')].map(el => el.id)
@@ -272,11 +262,9 @@ async function scheduleByArea(page, hours) {
 		await mouse.up();
 
 		const available = await page.$eval('#butProviderSchedule', el => !el.disabled);
-
 		if (available) {
 			await page.click('#butProviderSchedule');
-			console.log('Scheduling the whole week... (5s)');
-			await sleep(5000);
+			await waitForSomeButton(page, 5000);
 		}
 
 		// 2. unschedule the unwanted hours
@@ -306,29 +294,54 @@ async function scheduleByArea(page, hours) {
 		});
 		console.log('toUnschedule', toUnschedule);
 
-		for (let i = 0; i < toUnschedule.length; i++) {
-			try {
-				await page.click('#' + toUnschedule[i]);
-				await page.click('#butProviderUnschedule');
-				await sleep(1000);
-				// await page.waitForNavigation();
-			} catch (err) {
-				console.log(err);
+		if (toUnschedule.length) {
+			const selectToUnschedule = async i => {
+				try {
+					await page.click('#' + toUnschedule[i]);
+				} catch (err) {
+					console.log(err.message);
+				}
 			}
+
+			await selectToUnschedule(0); // select first hour to undo previous selection
+			const { keyboard } = page;
+			await keyboard.down('Control'); // hold control to select multiple hours
+			for (let i = 1; i < toUnschedule.length; i++) await selectToUnschedule(i);
+			await keyboard.up('Control');
+
+			await page.click('#butProviderUnschedule');
+			await waitForSomeButton(page, 5000);
 		}
 	} catch (err) {
 		console.log(err);
 	}
 
-	const unscheduled = hours.filter(hour => !hour.scheduled);
-	let count = hours.length - unscheduled.length;
-	if (unscheduled.length) {
+	const toSchedule = hours.filter(hour => !hour.scheduled);
+	let count = hours.length - toSchedule.length;
+	if (toSchedule.length && count < hoursAvailable) {
 		// schedule the missing hours
 		console.log('Scheduling the missing hours...');
-		count += await scheduleByAdding(page, unscheduled);
+		count += await scheduleByAdding(page, toSchedule);
 	}
 
 	return count;
+}
+
+async function waitForSomeButton(page, timeout = 30000) {
+	try {
+		await page.waitForFunction(() => (
+			!document.querySelector('#butProviderSchedule').disabled || !document.querySelector('#butProviderUnschedule').disabled // wait for either button to be enabled
+		), { timeout });
+		console.log('Waiting 5 seconds for buttons...');
+	} catch (err) {
+		console.log('Buttons not enabled');
+	}
+}
+
+function getHoursAvailable(page) {
+	return page.evaluate(() => (
+		+document.querySelector('#lblAvailableHours').textContent - +document.querySelector('#lblScheduledHours').textContent
+	))
 }
 
 function getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule) {

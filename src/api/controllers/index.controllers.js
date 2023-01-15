@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import sqlite3 from 'sqlite3';
 import sleep from '../../helpers/sleep.js';
-import { DB_PATH, URL_BILLING, URL_RATING, URL_USD } from '../../constants.js';
+import { DB_PATH, URL_BILLING, URL_USD } from '../../constants.js';
 import { save as saveCookies } from '../../helpers/cookies.js';
 
 export function hello(_, res) {
@@ -129,57 +129,6 @@ export function billing(req, res) {
 				await browser.close();
 
 				if (newLogin) saveCookies(cookies);
-			} catch (err) {
-				console.log(err);
-				res.status(500).json({ message: err.message });
-			}
-		});
-	});
-}
-
-export function rating(req, res) {
-	db.serialize(() => {
-		db.all('SELECT * FROM User', async (err, users) => {
-			if (err) {
-				console.log(err);
-				return res.status(500).json({ message: err.message });
-			}
-			if (users.length !== 1) {
-				return res.status(500).json({ message: 'No hay usuarios registrados' });
-			}
-
-			try {
-				// start puppeteer
-				// const browser = await puppeteer.launch({ headless: false });
-				const browser = await puppeteer.launch();
-				const page = await browser.newPage();
-				await page.goto(URL_RATING, { timeout: 0 });
-				// await page.waitForNavigation();
-				await sleep(500);
-
-				await page.waitForSelector('#butSignIn');
-				await page.type('#txtUserName', users[0].Username);
-				await page.type('#txtPassword', users[0].Password);
-				await sleep(500);
-				await page.click('#butSignIn');
-
-				await page.waitForSelector('table');
-
-				return res.status(200).json({ message: 'ok' });
-
-				const data = await page.$eval('tr:nth-child(2)', el => {
-					console.log(el);
-					return {
-						scheduledHours: +el.children[2].innerText,
-						onlineHours: +el.children[3].innerText,
-						minutesWaiting: +el.children[8].innerText.replace(/,/g, ''),
-						minutesInSession: +el.children[9].innerText.replace(/,/g, '')
-					}
-				});
-
-				res.status(200).json(data);
-				await browser.close();
-
 			} catch (err) {
 				console.log(err);
 				res.status(500).json({ message: err.message });
