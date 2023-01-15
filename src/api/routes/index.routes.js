@@ -4,7 +4,7 @@ import hour from './hour.routes.js';
 import week from './week.routes.js';
 import preference from './preference.routes.js';
 import preferredHour from './preferredHour.routes.js';
-import { hello, login, logout, billing, rating, usd } from '../controllers/index.controllers.js';
+import { hello, login, logout, billing, usd } from '../controllers/index.controllers.js';
 
 const router = Router();
 
@@ -12,7 +12,6 @@ router.get('/', hello);
 router.post('/login', login);
 router.post('/logout', logout);
 router.get('/billing', billing);
-router.get('/rating', rating);
 router.get('/usd', usd);
 
 router.use('/user', user);

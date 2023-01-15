@@ -4,15 +4,14 @@ import { showLoading, hideLoading } from './utils.js';
 window.addEventListener('load', async function () {
     initSelectors();
 
-    showLoading();
-    Promise.all([fetchData(), fetchUSD()]).then(hideLoading).catch(err => console.error(err));
+    loadData();
 
     document.querySelector('.section-payment').addEventListener('input', recalculatePayment);
     document.querySelector('.section-time').addEventListener('input', e => {
         recalculateTime();
         if (e.target.id = 'onlineHours') recalculatePayment(); // recalculate payment if online hours change (bonus might change)
     });
-    
+
     document.querySelector('.section-buttons').addEventListener('click', e => {
         const { id } = e.target;
         if (id === 'reset') {
@@ -25,13 +24,12 @@ window.addEventListener('load', async function () {
                 $scheduledHours.value = scheduledHours;
                 $onlineHours.value = onlineHours;
             }
-            if(usd) $usd.value = usd;
-            
+            if (usd) $usd.value = usd;
+
             recalculatePayment();
             recalculateTime();
         } else if (id === 'refresh') {
-            fetchData();
-            fetchUSD();
+            loadData();
         }
     });
 });
@@ -74,7 +72,7 @@ async function fetchUSD() {
         console.log(err);
         return alert('Error fetching USD');
     }
-    
+
     // usd = 4700;
 
     $usd.value = usd;
@@ -102,7 +100,7 @@ function initSelectors() {
     $minutesInSession = document.getElementById('minutesInSession');
     $scheduledHours = document.getElementById('scheduledHours');
     $onlineHours = document.getElementById('onlineHours');
-    
+
     $paymentResult1 = document.querySelectorAll('.payment-result1');
     $paymentResult2 = document.querySelectorAll('.payment-result2');
     $paymentResult3 = document.querySelector('.payment-result3');
@@ -119,6 +117,11 @@ function getBonus() {
     if (data.onlineHours < 90) return 70;
     if (data.onlineHours < 120) return 100;
     return 140;
+}
+
+function loadData() {
+    showLoading();
+    Promise.all([fetchData(), fetchUSD()]).then(hideLoading).catch(err => console.error(err));
 }
 
 let $minutesWaiting;
