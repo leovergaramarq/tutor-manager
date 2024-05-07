@@ -35,8 +35,8 @@ button.btn-primary:hover {
 }
 
 button.btn-secondary {
-    background-color: var(--gray-color);
-    color: var(--black-color-2);
+    background-color: var(--gray-color-2);
+    color: var(--black-color);
     transition: all 0.3s ease;
 }
 
@@ -96,7 +96,7 @@ input[type="checkbox"] {
     top: 0;
     left: 0;
     width: 100%;
-    height: 50px;
+    height: var(--navbar-height);
     display: flex;
     justify-content: space-between;
     background-color: var(--primary-color);
@@ -188,7 +188,7 @@ input[type="checkbox"] {
 
 .loading {
     position: absolute;
-    top: 0;
+    top: var(--navbar-height);
     left: 0;
     height: 100%;
     width: 100%;
@@ -230,4 +230,21 @@ input[type="checkbox"] {
         opacity: 1;
         transform: translate3d(0, -1rem, 0);
     }
+}
+
+.icon-info {
+    position: relative;
+    height: 18px;
+    width: 18px;
+    cursor: pointer;
+    /* transition: all 0.3s ease; */
+}
+
+.icon-info img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 100%;
+    width: 100%;
 }

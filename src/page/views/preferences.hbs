@@ -1,67 +1,91 @@
 {{> navbar }}
 <main>
     <div class="container">
-        <h1>Ajustes de Preferencias</h1>
+        <h1>Preference Settings</h1>
 
         <form>
             <div class="form-area-input">
                 <div class="form-column">
                     <div class="form-row">
-                        <label for="dayToSchedule">Día para agendar</label>
+                        <label for="dayToSchedule">
+                            <div>Schedule day</div>
+                            <span class="icon-info" title="Local day for scheduling."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <select id="dayToSchedule">
-                            <option value="0">Domingo</option>
-                            <option value="1">Lunes</option>
-                            <option value="2">Martes</option>
-                            <option value="3">Miércoles</option>
-                            <option value="4">Jueves</option>
-                            <option value="5">Viernes</option>
-                            <option value="6">Sábado</option>
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
                         </select>
                     </div>
 
                     <div class="form-row">
-                        <label for="hourToSchedule">Hora para agendar</label>
+                        <label for="hourToSchedule">
+                            <div>Schedule time</div>
+                            <span class="icon-info" title="Local time for scheduling in 24H format."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="hourToSchedule" type="time" step="3600">
                     </div>
                     
                     <div class="form-row">
-                        <label for="scheduleAnticipation">Segundos de anticipación para iniciar scrapping</label>
+                        <label for="scheduleAnticipation">
+                            <div>Seconds to anticipate scraping</div>
+                            <span class="icon-info" title="Start web scrapping X seconds before time. Highly recommended NOT to enter 0."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="scheduleAnticipation" type="number" min="0">
                     </div>
 
                     <div class="form-row">
-                        <label for="scheduleDelay">Milisegundos de delay para agendar</label>
+                        <label for="scheduleDelay">
+                            <div>Milliseconds to delay scheduling</div>
+                            <span class="icon-info" title="Miliseconds to wait before scheduling. Highly recommended to enter 1000."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="scheduleDelay" type="number" min="0">
                     </div>
 
                     <div class="form-row">
-                        <label for="deadlineMinutesToSchedule">Minutos para agendar luego de la hora</label>
+                        <label for="deadlineMinutesToSchedule">
+                            <div>Minutes to schedule after the hour</div>
+                            <span class="icon-info" title="Schedule automatically even if X minutes have passed since o'clock."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="deadlineMinutesToSchedule" type="number">
                     </div>
                 </div>
                 <div class="form-column">
                     <div class="form-row">
-                        <label for="scheduleMethod">Método de agendamiento</label>
+                        <label for="scheduleMethod">
+                            <div>Scheduling method</div>
+                            <span class="icon-info" title="1 (slower): schedules 1 hour at the time; 2: schedules a whole area (except for sunday if today is saturday) and then remove the unwanted hours."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <select id="scheduleMethod">
-                            <option value="0">Hora a hora</option>
-                            <option value="1">Seleccionar área y descartar</option>
+                            <option value="0">1: Hour by hour</option>
+                            <option value="1">2: Select area and discard</option>
                         </select>
                     </div>
 
                     <div class="form-row">
-                        <label for="schedulePreferredHours">Usar horas preferidas</label>
+                        <label for="schedulePreferredHours">
+                            <div>Use preferred hours</div>
+                            <span class="icon-info" title="Use the same selected hours for all weeks."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="schedulePreferredHours" type="checkbox">
                     </div>
 
                     <div class="form-row">
-                        <label for="puppeteerHeadless">Usar navegador sin interfaz</label>
+                        <label for="puppeteerHeadless">
+                            <div>Use headless browser</div>
+                            <span class="icon-info" title="Headless browser won't show the web scrapping process."><img src="/assets/icons/info.svg" alt="Info"></span>
+                        </label>
                         <input id="puppeteerHeadless" type="checkbox">
                     </div>
                 </div>
             </div>
             <div class="form-area-buttons">
-                <button class="btn-secondary" id="reset">Restablecer valores por defecto</button>
-                <button class="btn-primary" id="save">Guardar cambios</button>
+                <button class="btn-secondary" id="reset">Reset default values</button>
+                <button class="btn-primary" id="save">Save changes</button>
             </div>
         </form>
     </div>

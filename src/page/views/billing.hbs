@@ -2,7 +2,7 @@
 {{> loading }}
 <main>
     <section class="section-payment">
-        <h1>Pago</h1>
+        <h1>Billing Info</h1>
         <div class="area-calculation">
             <div class="row">
                 <span class="step">
@@ -11,15 +11,15 @@
                             <span class="value">2.5</span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesWaiting" placeholder="Minutos de espera">
+                                <input type="number" id="minutesWaiting" placeholder="Minutes waiting">
                             </span>
                             <span class="plus"></span>
                             <span class="value">
-                                <input type="number" id="usdPerHour" placeholder="Pago por hora" value="6">
+                                <input type="number" id="usdPerHour" placeholder="Payment per hour" value="7">
                             </span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesInSession" placeholder="Minutos en sesión">
+                                <input type="number" id="minutesInSession" placeholder="Minutes in session">
                             </span>
                         </span>
                         <hr>
@@ -61,7 +61,7 @@
                     </span>
                     <span class="times"></span>
                     <span class="value">
-                        <input type="number" id="usd" placeholder="Precio dólar">
+                        <input type="number" id="usd" placeholder="Dollar price" value="3800">
                     </span>
                 </span>
                 <span class="equals"></span>
@@ -75,20 +75,20 @@
         </div>
     </section>
     <section class="section-time">
-        <h1>Tiempo Trabajado</h1>
+        <h1>Time worked</h1>
         <div class="area-calculation">
             <div class="row">
                 <span class="step">
                     <span class="fraction">
                         <span class="numerator">
                             <span class="value">
-                                <input type="number" id="onlineHours" placeholder="Horas online">
+                                <input type="number" id="onlineHours" placeholder="Online hours">
                             </span>
                         </span>
                         <hr>
                         <span class="denominator">
                             <span class="value">
-                                <input type="number" id="scheduledHours" placeholder="Horas agendadas">
+                                <input type="number" id="scheduledHours" placeholder="Scheduled hours">
                             </span>
                         </span>
                     </span>
@@ -104,8 +104,8 @@
         </div>
     </section>
     <div class="section-buttons">
-        <button class="btn-secondary" id="reset">Restablecer</button>
-        <button class="btn-primary" id="refresh">Actualizar</button>
+        <button class="btn-secondary" id="reset">Reset</button>
+        <button class="btn-primary" id="refresh">Update</button>
     </div>
 </main>
 <script type="module" src="/js/billing.js"></script>

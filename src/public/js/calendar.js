@@ -8,13 +8,13 @@ const $tbody = document.createElement("tbody");
 $thead.innerHTML = `
 <tr>
     <td></td>
-    <td>Domingo</td>
-    <td>Lunes</td>
-    <td>Martes</td>
-    <td>Miércoles</td>
-    <td>Jueves</td>
-    <td>Viernes</td>
-    <td>Sábado</td>
+    <td>Sunday</td>
+    <td>Monday</td>
+    <td>Tuesday</td>
+    <td>Wednesday</td>
+    <td>Thursday</td>
+    <td>Friday</td>
+    <td>Saturday</td>
 </tr>
 `;
 
@@ -39,12 +39,6 @@ $table.appendChild($tbody);
 fragment.appendChild($table);
 
 $calendar.appendChild(fragment);
-
-// document.querySelector('tbody').addEventListener('click', (e) => {
-//     if(e.target.classList.contains('cell')) {
-//         e.target.classList.toggle('selected');
-//     }
-// });
 
 let cellMouseDown;
 

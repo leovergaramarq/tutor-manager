@@ -4,14 +4,15 @@ main {
     /* grid-template-rows: 1fr 1fr; */
     grid-auto-flow: column;
     gap: 12px;
-    min-height: 100vh;
-    margin-top: 50px;
+    margin-top: var(--navbar-height);
+    min-height: calc(100vh - var(--navbar-height));
     padding: 8px 48px;
     background-color: var(--quaternary-color);
 }
 
 section {
     text-align: center;
+    height: min-content;
 }
 
 .section-time {
@@ -55,6 +56,10 @@ section {
     display: flex;
     gap: 8px;
     justify-content: space-between;
+}
+
+.section-schedule__changes > button {
+    flex-grow: 1;
 }
 
 .section-calendar {

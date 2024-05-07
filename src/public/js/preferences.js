@@ -45,10 +45,10 @@ document
                 if (status !== 200) throw new Error(data.message);
             } catch (err) {
                 console.error(err);
-                return alert("Error al guardar preferencias");
+                return alert("Error saving preferences");
             }
             // fetchPreferences();
-            alert("Preferencias guardadas");
+            alert("Preferences saved");
         } else if (id === "reset") {
             try {
                 const { status, data } = await fetch("/api/preferences", {
@@ -57,10 +57,10 @@ document
                 if (status !== 200) throw new Error(data.message);
             } catch (err) {
                 console.error(err);
-                return alert("Error al restablecer preferencias");
+                return alert("Error resetting preferences");
             }
             fetchPreferences();
-            alert("Preferencias restablecidas");
+            alert("Preferences reset");
         }
     });
 

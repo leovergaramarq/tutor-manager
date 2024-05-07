@@ -98,11 +98,7 @@ window.addEventListener("load", () => {
             } else {
                 if (e.target.classList.contains("section-schedule__save")) {
                     const result = await saveHours();
-                    alert(
-                        result
-                            ? "Cambios guardados"
-                            : "Error al guardar los cambios"
-                    );
+                    alert(result ? "Changes saved" : "Error saving changes");
                 } else if (
                     e.target.classList.contains("section-schedule__schedule")
                 ) {
@@ -112,7 +108,7 @@ window.addEventListener("load", () => {
                     $buttons.forEach(($button) => ($button.disabled = true));
 
                     const result = await saveHours();
-                    if (!result) return alert("Error al guardar los cambios");
+                    if (!result) return alert("Error saving changes");
                     try {
                         const { status, data } = await fetch("/api/week", {
                             method: "POST",
@@ -122,14 +118,12 @@ window.addEventListener("load", () => {
                         });
                         if (status !== 200) throw new Error(data.message);
                         alert(
-                            "Horario agendado.\nPor favor revisar resultado en la web.\n\n" +
+                            "Scheduled time.Please check results on Tutor.com website.\n\n" +
                                 data.message
                         );
                     } catch (error) {
                         console.error(error);
-                        alert(
-                            "Error al programar el horario\n\n" + error.message
-                        );
+                        alert("Error scheduling time\n\n" + error.message);
                     }
                     $buttons.forEach(($button) => ($button.disabled = false));
                 }
@@ -196,10 +190,10 @@ function updateHeader() {
     const [sunday, saturday] = getWeekBounds(week);
     document.querySelector(
         ".section-calendar__header__title"
-    ).textContent = `Semana del ${sunday.getDate()} al ${saturday.getDate()} (${
+    ).textContent = `Week of ${sunday.getDate()} to ${saturday.getDate()} (${
         preferences.schedulePreferredHours
-            ? "Horas preferidas"
-            : "Horario por semana"
+            ? "Preferred hours"
+            : "Weekly schedule"
     })`;
 }
 

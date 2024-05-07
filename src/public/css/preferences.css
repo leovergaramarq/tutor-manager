@@ -1,9 +1,9 @@
 @import url("base.css");
 
 main {
-    height: 100vh;
     background-color: var(--quaternary-color);
-    margin-top: 50px;
+    margin-top: var(--navbar-height);
+    min-height: calc(100vh - var(--navbar-height));
     padding: 8px 48px;
     text-align: center;
 }
@@ -33,6 +33,9 @@ form {
 
 .form-area-buttons {
     margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
 }
 
 .form-column {
@@ -42,11 +45,14 @@ form {
     /* flex-grow: 1; */
 }
 
-.form-row * {
+.form-row *:not(label) {
     display: block;
 }
 
 label {
     margin-bottom: 4px;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }

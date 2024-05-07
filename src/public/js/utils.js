@@ -1,12 +1,5 @@
 export const EASTERN_TIMEZONE = "America/New_York";
 
-// export function getEasternGMT() {
-//     return (
-//         getEasternTime().getHours() -
-//         +new Date().toUTCString().split(" ")[4].split(":")[0]
-//     );
-// }
-
 export function getTimezones() {
     const localTimezone = formatTimezone(
         Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -29,8 +22,8 @@ function formatTimezone(timezone) {
 }
 
 function getGMT(date, utcDate = new Date()) {
-    const dateHours = date.getHours();
-    const utcHours = utcDate.getUTCHours();
+    let dateHours = date.getHours();
+    let utcHours = utcDate.getUTCHours();
 
     const dateDays = date.getDate();
     const utcDays = utcDate.getUTCDate();
@@ -38,7 +31,8 @@ function getGMT(date, utcDate = new Date()) {
     if (utcDays > dateDays) utcHours += 24;
     else if (utcDays < dateDays) dateHours += 24;
 
-    return dateHours - utcHours;
+    const gmt = dateHours - utcHours;
+    return gmt < 0 ? gmt : `+${gmt}`;
 }
 
 export function getEasternTime(date = new Date()) {
