@@ -9,6 +9,7 @@ export const SCHEDULE_ANTICIPATION = 60000; // begin scrapping 1 minute before t
 export const SCHEDULE_DELAY = 1000; // schedule 1 second after the hour (to avoid scheduling conflicts)
 export const SCHEDULE_METHOD = 0; // 0 = adding, 1 = area
 export const SCHEDULE_PREFERRED_HOURS = 0; // 0 = no (use table Hour), 1 = yes (use table PreferredHour)
+export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 process.env.TZ = 'America/New_York';
 // process.env.TZ = 'Europe/Madrid'; // for testing

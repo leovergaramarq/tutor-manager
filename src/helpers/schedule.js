@@ -5,6 +5,7 @@ import { defPreferences } from './preferences.js';
 import { save as saveCookies } from './cookies.js';
 import sleep from './sleep.js';
 import { getWeekBounds } from './week.js';
+import { LOCAL_TIMEZONE } from '../config.js';
 
 export default function setSchedule() {
 	console.log('Setting schedule...');
@@ -29,10 +30,24 @@ export default function setSchedule() {
 				DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
 				PuppeteerHeadless: puppeteerHeadless
 			} = preferences;
+			function convertUTCDateToLocalDate(date) {
+				var newDate = new Date(date.getTime()+date.getTimezoneOffset()*60*1000);
+			
+				var offset = date.getTimezoneOffset() / 60;
+				var hours = date.getHours();
+			
+				newDate.setHours(hours - offset);
+			
+				return newDate;   
+			}
 
-			const date = new Date();
+			const date = new Date(new Date().toLocaleString('en-US', {
+				timeZone: LOCAL_TIMEZONE,
+			}));
 			const dateSched = getDateToSchedule(date, dayToSchedule, hourToSchedule, deadlineMinutesToSchedule);
 
+			const milisToSched = (dateSched - date) - scheduleAnticipation;
+			
 			// clearTimeout(timeoutSetSched);
 			timeoutSetSched = setTimeout(() => {
 				timeoutSetSched = null;
@@ -48,9 +63,7 @@ export default function setSchedule() {
 				schedule(1, dateSched, {
 					scheduleDelay, scheduleMethod, schedulePreferredHours, puppeteerHeadless
 				});
-			}, (dateSched - date) - scheduleAnticipation);
-
-			const milisToSched = (dateSched - date) - scheduleAnticipation;
+			}, milisToSched);
 
 			if (milisToSched <= 0) {
 				console.log('Scheduling now...');
@@ -71,7 +84,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 		return;
 	}
 
-	console.log('Scheduling...');
+	console.log(`Scheduling ${week == 0 ? 'for current week' : 'for next week'}...`);
 	clearTimeout(timeoutFinishSched);
 
 	db.serialize(() => {
@@ -114,7 +127,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
 
 				if (!hours.length) {
 					if (callback) callback(404, 'No hours found.');
-					return;
+					return console.log('No hours found.');
 				}
 
 				console.log(hours);
