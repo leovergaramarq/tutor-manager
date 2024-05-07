@@ -13,5 +13,6 @@
     --gray-color-4: #ddd;
     --gray-color-5: #eee;
     --green-color: #64d366;
-    --font-family: 'Lato', sans-serif, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    --font-family: "Lato", sans-serif, "Lucida Sans", "Lucida Sans Regular",
+        "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }

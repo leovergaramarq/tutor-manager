@@ -1,9 +1,10 @@
-import sqlite3 from 'sqlite3';
-import { DB_PATH } from '../constants.js';
+import sqlite3 from "sqlite3";
+import { DB_PATH } from "../constants.js";
 
 export default function initDB(callback) {
     db.serialize(() => {
-        db.run(`
+        db.run(
+            `
             CREATE TABLE IF NOT EXISTS "User" (
                 "UserID"	INTEGER NOT NULL UNIQUE,
                 "Username"	TEXT NOT NULL UNIQUE,
@@ -12,12 +13,14 @@ export default function initDB(callback) {
                 PRIMARY KEY("UserID" AUTOINCREMENT),
                 UNIQUE("Username")
             );
-        `, err => {
-            if (err) {
-                if (callback) return callback(err);
-                return console.error(err);
-            }
-            return db.run(`
+        `,
+            (err) => {
+                if (err) {
+                    if (callback) return callback(err);
+                    return console.error(err);
+                }
+                return db.run(
+                    `
                 CREATE TABLE IF NOT EXISTS "Hour" (
                     "HourID"	INTEGER NOT NULL UNIQUE,
                     "Year"	INTEGER NOT NULL,
@@ -26,12 +29,14 @@ export default function initDB(callback) {
                     "Hour"	INTEGER NOT NULL,
                     PRIMARY KEY("HourID" AUTOINCREMENT)
                 );
-            `, err => {
-                if (err) {
-                    if (callback) return callback(err);
-                    return console.error(err);
-                }
-                return db.run(`
+            `,
+                    (err) => {
+                        if (err) {
+                            if (callback) return callback(err);
+                            return console.error(err);
+                        }
+                        return db.run(
+                            `
                     CREATE TABLE IF NOT EXISTS "Preference" (
                         "PreferenceID"	INTEGER NOT NULL UNIQUE,
                         "HourToSchedule"	INTEGER NOT NULL DEFAULT 12,
@@ -44,28 +49,35 @@ export default function initDB(callback) {
                         "PuppeteerHeadless"	INTEGER NOT NULL DEFAULT 0,
                         PRIMARY KEY("PreferenceID" AUTOINCREMENT)
                     );
-                `, err => {
-                    if (err) {
-                        if (callback) return callback(err);
-                        return console.error(err);
-                    }
-                    return db.run(`
+                `,
+                            (err) => {
+                                if (err) {
+                                    if (callback) return callback(err);
+                                    return console.error(err);
+                                }
+                                return db.run(
+                                    `
                         CREATE TABLE IF NOT EXISTS "PreferredHour" (
                             "PreferredHourID"	INTEGER NOT NULL UNIQUE,
                             "Day"	INTEGER NOT NULL,
                             "Hour"	INTEGER NOT NULL,
                             PRIMARY KEY("PreferredHourID" AUTOINCREMENT)
                         );
-                    `, err => {
-                        if (err) {
-                            if (callback) return callback(err);
-                            return console.error(err);
-                        }
-                        if (callback) callback();
-                    });
-                });
-            });
-        });
+                    `,
+                                    (err) => {
+                                        if (err) {
+                                            if (callback) return callback(err);
+                                            return console.error(err);
+                                        }
+                                        if (callback) callback();
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+            }
+        );
     });
 }
 

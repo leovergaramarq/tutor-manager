@@ -1,4 +1,4 @@
-@import url('base.css');
+@import url("base.css");
 
 * {
     box-sizing: border-box;
@@ -213,7 +213,7 @@ input[type="checkbox"] {
     gap: 1rem;
 }
 
-.loading-animation>span {
+.loading-animation > span {
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
@@ -221,7 +221,7 @@ input[type="checkbox"] {
     animation: loader-animation 0.5s ease-in-out infinite alternate;
 }
 
-.loading-animation>span:nth-child(2) {
+.loading-animation > span:nth-child(2) {
     animation-delay: 0.1s;
 }
 
