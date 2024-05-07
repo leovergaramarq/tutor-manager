@@ -92,7 +92,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
     }
 
     console.log(
-        `Scheduling ${week == 0 ? "for current week" : "for next week"}...`
+        `Scheduling ${week === 0 ? "for current week" : "for next week"}...`
     );
     clearTimeout(timeoutFinishSched);
 

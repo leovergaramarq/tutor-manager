@@ -55,13 +55,12 @@ $tbody.addEventListener("mousedown", (e) => {
 });
 
 $tbody.addEventListener("mouseup", (e) => {
-    console.log(e.target);
     if (e.target.classList.contains("cell") && cellMouseDown) {
         const cellFrom = cellMouseDown;
         const cellTo = e.target;
         cellMouseDown = undefined;
 
-        if (cellFrom == cellTo) {
+        if (cellFrom === cellTo) {
             cellFrom.classList.toggle("selected");
         } else {
             const from = +cellFrom.id.split("cell")[1];
@@ -70,8 +69,33 @@ $tbody.addEventListener("mouseup", (e) => {
             const min = Math.min(from, to);
             const max = Math.max(from, to);
 
-            for (let i = min; i <= max; i++) {
-                document.getElementById(`cell${i}`).classList.add("selected");
+            let xCells = (max % 7) - (min % 7);
+            const xStep = xCells ? xCells / Math.abs(xCells) : 1;
+            xCells += xStep;
+
+            let yCells = Math.floor(max / 7) - Math.floor(min / 7);
+            const yStep = yCells ? yCells / Math.abs(yCells) : 1;
+            yCells += yStep;
+
+            const selectedCells = [];
+            for (let i = 0; i != yCells; i += yStep) {
+                for (let j = 0; j != xCells; j += xStep) {
+                    const id = min + i * 7 + j;
+                    selectedCells.push(document.getElementById(`cell${id}`));
+                }
+            }
+            if (
+                selectedCells.every(
+                    (cell) =>
+                        cell.classList.contains("selected") ===
+                        selectedCells[0].classList.contains("selected")
+                )
+            ) {
+                selectedCells.forEach((cell) =>
+                    cell.classList.toggle("selected")
+                );
+            } else {
+                selectedCells.forEach((cell) => cell.classList.add("selected"));
             }
         }
     }

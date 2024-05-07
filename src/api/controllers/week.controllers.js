@@ -22,7 +22,7 @@ export function get(req, res) {
     } else {
         console.log("b");
         date = new Date(date.replace(/-/g, "/"));
-        if (date == "Invalid Date") {
+        if (date === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
         } else {
             date = new Date(date);
@@ -65,7 +65,7 @@ export function clearWeek(req, res) {
         date = new Date();
     } else {
         date = new Date(date.replace(/-/g, "/"));
-        if (date == "Invalid Date") {
+        if (date === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
         } else {
             date = new Date(date);
