@@ -11,16 +11,15 @@
                             <span class="value">2.5</span>
                             <span class="times"></span>
                             <span class="value">
-                                {{!-- TODO: set titles (tooltips) --}}
-                                <input type="number" id="minutesWaiting" placeholder="Minutes waiting">
+                                <input type="number" id="minutesWaiting" placeholder="Minutes waiting" title="Minutes waiting">
                             </span>
                             <span class="plus"></span>
                             <span class="value">
-                                <input type="number" id="usdPerHour" placeholder="Payment per hour" value="7.5">
+                                <input type="number" id="usdPerHour" placeholder="Payment per hour" value="7.5" title="Payment per hour">
                             </span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesInSession" placeholder="Minutes in session">
+                                <input type="number" id="minutesInSession" placeholder="Minutes in session" title="Minutes in session">
                             </span>
                         </span>
                         <hr>
@@ -32,7 +31,7 @@
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result1" readonly>
+                        <input type="number" class="payment-result1" readonly title="Payment in USD before bonus">
                         USD
                     </span>
                 </span>
@@ -40,17 +39,17 @@
             <div class="row">
                 <span class="step">
                     <span class="value">
-                        <input type="number" readonly class="payment-result1">
+                        <input type="number" readonly class="payment-result1" title="Payment in USD before bonus">
                     </span>
                     <span class="plus"></span>
                     <span class="value">
-                        <input type="number" readonly placeholder="Bonus" id="bonus">
+                        <input type="number" readonly placeholder="Bonus" id="bonus" title="Bonus">
                     </span>
                 </span>
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result2" readonly>
+                        <input type="number" class="payment-result2" readonly title="Payment in USD after bonus">
                         USD
                     </span>
                 </span>
@@ -58,17 +57,17 @@
             <div class="row">
                 <span class="step">
                     <span class="value">
-                        <input type="number" readonly class="payment-result2">
+                        <input type="number" readonly class="payment-result2" title="Payment in USD after bonus">
                     </span>
                     <span class="times"></span>
                     <span class="value">
-                        <input type="number" id="usd" placeholder="Dollar price" value="3800">
+                        <input type="number" id="usd" placeholder="Dollar price" value="3800" title="Dollar price">
                     </span>
                 </span>
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result3 result" readonly>
+                        <input type="number" class="payment-result3 result" readonly title="Payment in COP">
                         COP
                     </span>
                 </span>
@@ -83,13 +82,13 @@
                     <span class="fraction">
                         <span class="numerator">
                             <span class="value">
-                                <input type="number" id="onlineHours" placeholder="Online hours">
+                                <input type="number" id="onlineHours" placeholder="Online hours" title="Online hours">
                             </span>
                         </span>
                         <hr>
                         <span class="denominator">
                             <span class="value">
-                                <input type="number" id="scheduledHours" placeholder="Scheduled hours">
+                                <input type="number" id="scheduledHours" placeholder="Scheduled hours" title="Scheduled hours">
                             </span>
                         </span>
                     </span>
@@ -97,7 +96,7 @@
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="time-result" readonly>
+                        <input type="number" class="time-result" readonly title="Percentage of time worked">
                         %
                     </span>
                 </span>
