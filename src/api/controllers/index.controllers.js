@@ -113,9 +113,7 @@ export function billing(req, res) {
                 return res.status(500).json({ message: err.message });
             }
             if (users.length !== 1) {
-                return res
-                    .status(500)
-                    .json({ message: "No hay usuarios registrados" });
+                return res.status(500).json({ message: "No existing users" });
             }
 
             try {
@@ -132,7 +130,7 @@ export function billing(req, res) {
 
                 let newLogin;
                 if (!(await page.$("#otherPanel"))) {
-                    console.log("No hay cookies");
+                    console.log("No cookies");
                     newLogin = true;
 
                     await page.waitForSelector("#butSignIn");
