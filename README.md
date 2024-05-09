@@ -3,7 +3,7 @@ Tutor.com auto scheduler and facilitator of billing information. This Web Applic
 
 ## Built with:
 
- - Server side: [Node.js](https://nodejs.org/), [ExpressJS](https://expressjs.com/), [Puppeteer](https://pptr.dev).
+ - Server side: [Node.js](https://nodejs.org/), [ExpressJS](https://expressjs.com/), [Puppeteer](https://pptr.dev), [SQLite](https://www.sqlite.org).
  - Client side: [Handlebars](https://handlebarsjs.com), CSS and JavaScript (Vanilla).
 
 ## Views
