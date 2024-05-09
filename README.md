@@ -2,13 +2,13 @@
 Tutor.com auto scheduler and facilitator of billing information
 
 ## Login
-![image](https://user-images.githubusercontent.com/73978713/214758927-f9f579f0-334d-496f-8b28-b5014c9984f4.png)
+![image](https://github.com/leovergaramarq/tutor-manager/assets/73978713/b3ca679d-7e75-4161-86ae-f8aca16fdb9b)
 
 ## Scheduling
-![image](https://user-images.githubusercontent.com/73978713/214758769-77909f47-d7e8-44ff-a0eb-b7d250400f3b.png)
+![image](https://github.com/leovergaramarq/tutor-manager/assets/73978713/f709508c-6088-4f94-a871-56533da151cf)
 
 ## Billing
-![image](https://user-images.githubusercontent.com/73978713/214758877-d7477931-162c-4062-aa61-d672e7a881f6.png)
+![image](https://github.com/leovergaramarq/tutor-manager/assets/73978713/75a5224e-c8ea-4ae4-995b-d66a975436c2)
 
 ## Preferences
-![image](https://user-images.githubusercontent.com/73978713/214758978-e6522d32-8cf4-4705-a911-568589990e2d.png)
+![image](https://github.com/leovergaramarq/tutor-manager/assets/73978713/d9272435-ff7f-4202-accf-69b5176dc1b1)
