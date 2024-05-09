@@ -59,15 +59,15 @@ window.addEventListener("load", () => {
             setInterval(updateTime, 1000);
         });
 
-    const timezones = getTimezones();
+    const { eastern: timezoneEastern, local: timezoneLocal } = getTimezones();
 
     document.querySelector(
         ".time-local .section-time__item__timezone"
-    ).textContent = timezones.local;
+    ).textContent = timezoneLocal;
 
     document.querySelector(
         ".time-eastern .section-time__item__timezone"
-    ).textContent = timezones.eastern;
+    ).textContent = timezoneEastern;
 
     // change week event
     document
@@ -118,7 +118,7 @@ window.addEventListener("load", () => {
                         });
                         if (status !== 200) throw new Error(data.message);
                         alert(
-                            "Scheduled time.Please check results on Tutor.com website.\n\n" +
+                            "Success! Please check results on the Tutor.com website.\n\n" +
                                 data.message
                         );
                     } catch (error) {
@@ -188,6 +188,14 @@ function updateTimeLeft() {
 
 function updateHeader() {
     const [sunday, saturday] = getWeekBounds(week);
+
+    // disable arrows if schedulePreferredHours is true
+    // if (preferences.schedulePreferredHours) {
+    //     document
+    //         .querySelectorAll(".section-calendar__header__arrow")
+    //         .forEach(($arrow) => $arrow.classList.add("hidden"));
+    // }
+
     document.querySelector(
         ".section-calendar__header__title"
     ).textContent = `Week of ${sunday.getDate()} to ${saturday.getDate()} (${
@@ -201,8 +209,6 @@ async function fetchCalendar() {
     try {
         const { status, data } = await fetch("/api/week/" + week);
         if (status !== 200) throw new Error(data.message);
-        // data[6][23] = 1; // test
-        // console.log(data);
         weekMatrix = data;
         updateCalendar();
     } catch (err) {

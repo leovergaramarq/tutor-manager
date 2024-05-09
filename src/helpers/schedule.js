@@ -4,13 +4,21 @@ import { DB_PATH, URL_SCHEDULE } from "../constants.js";
 import { defPreferences } from "./preferences.js";
 import { save as saveCookies } from "./cookies.js";
 import sleep from "./sleep.js";
-import { getLocalTime, getWeekBounds } from "./week.js";
+import { getDateFromSunday, getLocalTime, getWeekBounds } from "./week.js";
+import { SCHEDULE_BY_ADDING, SCHEDULE_BY_AREA } from "../config.js";
 
 export default function setSchedule() {
     console.log("Setting schedule...");
     clearInterval(intervalWeekly);
     clearTimeout(timeoutSetSched);
     clearTimeout(timeoutFinishSched);
+
+    // getCellsForAreaSchedule(SCHEDULE_BY_AREA, [
+    //     { HourID: 2, Year: 2024, Month: 5, Day: 8, Hour: 9 },
+    //     { HourID: 4, Year: 2024, Month: 5, Day: 10, Hour: 10 },
+    //     { HourID: 5, Year: 2024, Month: 5, Day: 9, Hour: 7 },
+    //     { HourID: 6, Year: 2024, Month: 5, Day: 9, Hour: 12 }
+    // ]); // test
 
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
@@ -125,12 +133,16 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     const [sunday, saturday] = getWeekBounds(
                         new Date(now.getTime() + week * 604800000)
                     ); // 604800000 = 7 days in case week is 1
+                    console.log("all hours", hours);
 
                     // filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
                     if (schedulePreferredHours === 0) {
                         hours = hours.filter(({ Year, Month, Day, Hour }) => {
-                            const hourToSched = new Date(
-                                `${Year}/${Month}/${Day} ${Hour}:00`
+                            const hourToSched = hourToDate(
+                                Year,
+                                Month,
+                                Day,
+                                Hour
                             );
                             return (
                                 hourToSched >= sunday &&
@@ -141,9 +153,10 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     } else {
                         // filter hours greater than now if schedulePreferredHours is true (using table PreferredHour)
                         hours = hours.filter(({ Day, Hour }) => {
-                            const nowDayOfWeek = now.getDay();
-                            if (Day > nowDayOfWeek) return true;
-                            if (Day < nowDayOfWeek) return false;
+                            if (week !== 0) return true;
+                            const nowDay = now.getDay() % 7;
+                            if (Day > nowDay) return true;
+                            if (Day < nowDay) return false;
                             return Hour > now.getHours();
                         });
                     }
@@ -153,7 +166,16 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                         return console.log("No hours found.");
                     }
 
-                    console.log(hours);
+                    console.log("hours to schedule", hours);
+
+                    const hoursDate = hours.map(({ Year, Month, Day, Hour }) =>
+                        hourToDate(Year, Month, Day, Hour, sunday)
+                    );
+
+                    const cells = hours.map(({ Year, Month, Day, Hour }) =>
+                        hourToCell(Year, Month, Day, Hour)
+                    );
+
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
@@ -214,6 +236,8 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                                 finishSchedule(
                                     page,
                                     hours,
+                                    hoursDate,
+                                    cells,
                                     scheduleMethod,
                                     newLogin,
                                     callback
@@ -224,6 +248,8 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             finishSchedule(
                                 page,
                                 hours,
+                                hoursDate,
+                                cells,
                                 scheduleMethod,
                                 newLogin,
                                 callback
@@ -239,7 +265,15 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
     });
 }
 
-async function finishSchedule(page, hours, scheduleMethod, newLogin, callback) {
+async function finishSchedule(
+    page,
+    hours,
+    hoursDate,
+    cells,
+    scheduleMethod,
+    newLogin,
+    callback
+) {
     try {
         await page.waitForSelector("#lblAvailableHours"); // wait for the page to load
         const hoursAvailable = await getHoursAvailable(page);
@@ -248,37 +282,45 @@ async function finishSchedule(page, hours, scheduleMethod, newLogin, callback) {
             console.log("No hours available.");
         } else {
             const count =
-                scheduleMethod === 0
-                    ? await scheduleByAdding(page, hours)
-                    : await scheduleByArea(page, hours, hoursAvailable);
+                scheduleMethod === SCHEDULE_BY_ADDING
+                    ? await scheduleByAdding(page, hours, cells)
+                    : await scheduleByArea(
+                          page,
+                          hours,
+                          hoursDate,
+                          cells,
+                          hoursAvailable
+                      );
             if (callback)
                 callback(200, `Scheduled ${count}/${hours.length} hours.`);
             console.log(`Scheduled ${count}/${hours.length} hours.`);
         }
         if (newLogin) saveCookies(await page.cookies());
     } catch (err) {
+        // TODO: should call callback?
         console.log(err);
     }
 }
 
-async function scheduleByAdding(page, hours) {
-    const toSchedule = hours.map(
-        ({ Year, Month, Day, Hour }) =>
-            "cell" +
-            ((Year ? new Date(`${Year}/${Month}/${Day}`).getDay() : Day) +
-                7 * Hour) // if !Year then using table PreferredHour (Day is the day of week)
-    );
-
+async function scheduleByAdding(page, hours, cells) {
     let count = 0;
+
+    const selectToSchedule = async (i) => {
+        try {
+            await page.click(`"#cell${cells[i]}`);
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
     try {
         await page.waitForSelector("#cell0");
+
+        await selectToSchedule(0);
         const { keyboard } = page;
         await keyboard.down("Control"); // hold control to select multiple hours
-        // await Promise.allSettled(toSchedule.map(id => page.click('#' + id)));
-        for (let i = 0; i < toSchedule.length; i++) {
-            try {
-                await page.click("#" + toSchedule[i]);
-            } catch (err) {}
+        for (let i = 1; i < hours.length; i++) {
+            await selectToSchedule(i);
         }
         await keyboard.up("Control");
         const available = await page.$eval(
@@ -287,7 +329,7 @@ async function scheduleByAdding(page, hours) {
         );
         if (available) {
             await page.click("#butProviderSchedule");
-            await waitForSomeButton(page, 5000);
+            await waitForScheduleButton(page, 10000);
         }
 
         console.log("looking for scheduled hours...");
@@ -297,15 +339,21 @@ async function scheduleByAdding(page, hours) {
             )
         );
         console.log("scheduled", scheduled);
-        scheduled.forEach((id) => toSchedule.includes(id) && count++);
+        scheduled.forEach(
+            (id) => cells.includes(+id.split("cell")[1]) && count++
+        );
     } catch (err) {
         console.log(err);
     }
     return count;
 }
 
-async function scheduleByArea(page, hours, hoursAvailable) {
+async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
     console.log("Please do not hover over the interface"); // otherwise drag and drop will not work
+
+    const { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
+
+    await page.waitForSelector("#cell0");
 
     const getScheduledHours = () =>
         [...document.querySelectorAll(".ui-selecting-finished-FILLED")].map(
@@ -313,79 +361,114 @@ async function scheduleByArea(page, hours, hoursAvailable) {
         );
 
     try {
-        await page.waitForSelector("#cell0");
+        // schedule the whole week simulating drag and drop
+        const { mouse } = page;
 
-        // 0. find hours already scheduled
+        const date = new Date();
+        const dayNow = date.getDay() % 7;
+        const hoursNow = date.getHours();
+
+        let didAvoidNextDay = false;
+        if (cellFrom % 7 === dayNow || cellFrom % 7 === (dayNow + 1) % 7) {
+            // if the first hour to schedule is today or tomorrow, move it to day after tomorrow
+            didAvoidNextDay = true;
+            if (cellFrom % 7 === dayNow) {
+                cellFrom += 2;
+            } else {
+                cellFrom += 1;
+            }
+        }
+
+        // find hours already scheduled
         const previouslyScheduled = await page.evaluate(getScheduledHours);
         console.log("previouslyScheduled", previouslyScheduled);
 
-        // 1. schedule the whole week simulating drag and drop
-        const { mouse } = page;
+        const scheduleArea = async (cellFrom, cellTo) => {
+            const selCellFrom = `$cell${cellFrom}`;
+            // await page.waitForSelector(selCellFrom);
+            const $cellFrom = await page.$(selCellFrom); // if saturday, area should not cover sundays
 
-        const isSaturday = new Date().getDay() === 6;
+            const selCellTo = `$cell${cellTo}`;
+            // await page.waitForSelector(selCellTo);
+            const $cellTo = await page.$(selCellTo);
 
-        let sel = isSaturday ? "#cell1" : "#cell0";
-        await page.waitForSelector(sel);
-        const cell1 = await page.$(sel); // if saturday, area should not cover sundays
+            const boxFrom = await $cellFrom.boundingBox();
+            const boxTo = await $cellTo.boundingBox();
 
-        sel = "#cell167";
-        await page.waitForSelector(sel);
-        const cell167 = await page.$(sel);
+            await mouse.move(
+                boxFrom.x + boxFrom.width / 2,
+                boxFrom.y + boxFrom.height / 2
+            );
+            await mouse.down();
+            await mouse.move(
+                boxTo.x + boxTo.width / 2,
+                boxTo.y + boxTo.height / 2
+            );
+            await mouse.up();
 
-        const box1 = await cell1.boundingBox();
-        const box167 = await cell167.boundingBox();
+            const available = await page.$eval(
+                "#butProviderSchedule",
+                (el) => !el.disabled
+            );
 
-        await mouse.move(box1.x + box1.width / 2, box1.y + box1.height / 2);
-        await mouse.down();
-        await mouse.move(
-            box167.x + box167.width / 2,
-            box167.y + box167.height / 2
-        );
-        await mouse.up();
+            if (available) {
+                await page.click("#butProviderSchedule");
+                await waitForScheduleButton(page, 10000);
+            }
+        };
 
-        const available = await page.$eval(
-            "#butProviderSchedule",
-            (el) => !el.disabled
-        );
-        if (available) {
-            await page.click("#butProviderSchedule");
-            await waitForSomeButton(page, 5000);
+        if (cellFrom % 7 <= cellTo % 7) {
+            // cellFrom must be in the same day as cellTo or before
+            await scheduleArea(cellFrom, cellTo);
+        } else {
+            console.log("Cannot schedule by area");
         }
 
-        // 2. unschedule the unwanted hours
+        if (didAvoidNextDay) {
+            // if there are unscheduled hours on tomorrow, schedule them
+            const cellFrom = ((hoursNow + 1) % 24) * 7 + ((dayNow + 1) % 7);
+            const cellTo = 23 * 7 + ((dayNow + 1) % 7);
+            if (
+                cells.some(
+                    (cell) => cell % 7 === cellFrom % 7 && cell >= cellFrom
+                )
+            ) {
+                await scheduleArea(cellFrom, cellTo);
+            }
+        }
+
+        // unschedule the unwanted hours
         const scheduled = await page.evaluate(getScheduledHours); // get the hours scheduled after step 1
-        console.log("scheduled", scheduled);
+        console.log("scheduled so far", scheduled);
 
         const toUnschedule = scheduled.filter((id) => {
-            // 1. skip hours previously scheduled
+            // skip hours previously scheduled
             if (previouslyScheduled.includes(id)) return false;
 
-            // 2. skip sundays if saturday
+            // skip sundays if saturday
             const cellNum = +id.split("cell")[1];
-            const dayOfWeek = cellNum % 7;
-            if (isSaturday && dayOfWeek === 0) return false;
+            const day = cellNum % 7;
+            const hour = Math.floor(cellNum / 7);
+            if (
+                day === dayNow ||
+                (day === (dayNow + 1) % 7 && hour <= hoursNow)
+            )
+                return false; // skip unscheduling if less than 24 hours from now
 
-            // 3. skip hours not wanted
-            const hourWanted = hours.find(({ Year, Month, Day, Hour }) => {
-                if (Year) {
-                    // using table Hour
-                    const date = new Date(`${Year}/${Month}/${Day}`);
-                    return (
-                        date.getDay() === dayOfWeek &&
-                        Hour === Math.floor(cellNum / 7)
-                    );
-                } else {
-                    return (
-                        Day === dayOfWeek && Hour === Math.floor(cellNum / 7)
-                    );
-                }
-            });
+            // avoid unscheduling hours that the user wants to schedule
+            const hourWanted = hours.find(
+                ({ Hour }, i) =>
+                    hoursDate[i].getDay() % 7 === day && Hour === hour
+            );
             if (hourWanted) hourWanted.scheduled = true; // mark as scheduled
             return !hourWanted;
         });
         console.log("toUnschedule", toUnschedule);
 
-        if (toUnschedule.length) {
+        let toSchedule = hours.filter((hour) => !hour.scheduled);
+        let count = hours.length - toSchedule.length;
+
+        const unschedule = async (unscheduleCountLimit) => {
             const selectToUnschedule = async (i) => {
                 try {
                     await page.click("#" + toUnschedule[i]);
@@ -397,29 +480,38 @@ async function scheduleByArea(page, hours, hoursAvailable) {
             await selectToUnschedule(0); // select first hour to undo previous selection
             const { keyboard } = page;
             await keyboard.down("Control"); // hold control to select multiple hours
-            for (let i = 1; i < toUnschedule.length; i++)
+            for (let i = 1; i < toUnschedule.length; i++) {
+                if (i >= unscheduleCountLimit) break;
                 await selectToUnschedule(i);
+            }
             await keyboard.up("Control");
 
             await page.click("#butProviderUnschedule");
-            await waitForSomeButton(page, 5000);
+            await waitForScheduleButton(page, 10000);
+        };
+
+        if (toSchedule.length && count < hoursAvailable) {
+            let unscheduleCountLimit =
+                scheduled.length + toSchedule.length - hoursAvailable;
+
+            if (unscheduleCountLimit > 0 && toUnschedule.length) {
+                await unschedule(unscheduleCountLimit);
+            }
+
+            // schedule the missing hours
+            console.log("Scheduling the missing hours...");
+            count += await scheduleByAdding(page, toSchedule, cells);
         }
+
+        await unschedule();
     } catch (err) {
         console.log(err);
-    }
-
-    const toSchedule = hours.filter((hour) => !hour.scheduled);
-    let count = hours.length - toSchedule.length;
-    if (toSchedule.length && count < hoursAvailable) {
-        // schedule the missing hours
-        console.log("Scheduling the missing hours...");
-        count += await scheduleByAdding(page, toSchedule);
     }
 
     return count;
 }
 
-async function waitForSomeButton(page, timeout = 30000) {
+async function waitForScheduleButton(page, timeout = 30000) {
     try {
         await page.waitForFunction(
             () =>
@@ -427,7 +519,7 @@ async function waitForSomeButton(page, timeout = 30000) {
                 !document.querySelector("#butProviderUnschedule").disabled, // wait for either button to be enabled
             { timeout }
         );
-        console.log("Waiting 5 seconds for buttons...");
+        console.log(`Waiting ${timeout / 1000} seconds for buttons...`);
     } catch (err) {
         console.log("Buttons not enabled");
     }
@@ -462,9 +554,50 @@ function getDateToSchedule(
     return dateSched;
 }
 
+function getCellsForAreaSchedule(hours) {
+    const minHour = Math.min(...hours.map(({ Hour }) => Hour));
+    const maxHour = Math.max(...hours.map(({ Hour }) => Hour));
+
+    const dates = hours.map(({ Year, Month, Day, Hour }) =>
+        hourToDate(Year, Month, Day, Hour)
+    );
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    const cellFrom = hourToCell(
+        minDate.getFullYear(),
+        minDate.getMonth() + 1,
+        minDate.getDate(),
+        minHour
+    );
+
+    const cellTo = hourToCell(
+        maxDate.getFullYear(),
+        maxDate.getMonth() + 1,
+        maxDate.getDate(),
+        maxHour
+    );
+
+    return { cellFrom, cellTo };
+}
+
+function hourToCell(Year, Month, Day, Hour) {
+    const cell =
+        (Year !== undefined
+            ? hourToDate(Year, Month, Day, Hour).getDay()
+            : Day) +
+        7 * Hour;
+    return cell;
+}
+
+function hourToDate(Year, Month, Day, Hour, sunday) {
+    return Year !== undefined
+        ? new Date(`${Year}/${Month}/${Day} ${Hour}:00`)
+        : getDateFromSunday(sunday, Day, Hour);
+}
+
 function clearInterval(interval) {
     if (interval) {
-        console.log("Clearing interval", interval);
         global.clearInterval(interval);
         interval = null;
     }
@@ -472,7 +605,6 @@ function clearInterval(interval) {
 
 function clearTimeout(timeout) {
     if (timeout) {
-        console.log("Clearing timeout", timeout);
         global.clearTimeout(timeout);
         timeout = null;
     }

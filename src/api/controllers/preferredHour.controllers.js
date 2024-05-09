@@ -77,8 +77,8 @@ export function add(req, res) {
         db.serialize(() => {
             let count = 0;
 
-            hours.forEach(({ day, i }) => {
-                day.forEach(({ hour, j }) => {
+            hours.forEach((day, i) => {
+                day.forEach((hour, j) => {
                     if (hour === 1) {
                         db.all(
                             `SELECT * FROM PreferredHour WHERE Day = ${i} AND Hour = ${j}`,

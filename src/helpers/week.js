@@ -25,3 +25,11 @@ export function getLocalTime(date = new Date()) {
         })
     );
 }
+
+export function getDateFromSunday(sunday, dayOfWeek, hour) {
+    const date = new Date(sunday);
+    date.setDate(date.getDate() + dayOfWeek);
+    date.setHours(hour);
+
+    return date;
+}

@@ -11,5 +11,8 @@ export const SCHEDULE_METHOD = 0; // 0 = adding, 1 = area
 export const SCHEDULE_PREFERRED_HOURS = 0; // 0 = no (use table Hour), 1 = yes (use table PreferredHour)
 export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+export const SCHEDULE_BY_ADDING = 0;
+export const SCHEDULE_BY_AREA = 1;
+
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing

@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 import { DB_PATH } from "../../constants.js";
-import { getWeekBounds } from "../../helpers/week.js";
+import { getDateFromSunday, getWeekBounds } from "../../helpers/week.js";
 
 export function add(req, res) {
     const { week } = req.body;
@@ -77,9 +77,7 @@ export function add(req, res) {
             hours.forEach((day, i) => {
                 day.forEach((hour, j) => {
                     // const date = new Date(sunday.getTime() + i * 86400000 + j * 3600000);
-                    const date = new Date(sunday);
-                    date.setDate(date.getDate() + i);
-                    date.setHours(j);
+                    const date = getDateFromSunday(sunday, i, j);
 
                     const year = date.getFullYear();
                     const month = date.getMonth() + 1;

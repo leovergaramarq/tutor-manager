@@ -5,22 +5,18 @@ import { schedule as sch } from "../../helpers/schedule.js";
 
 export function get(req, res) {
     const { week } = req.params;
-    // console.log('week', week);
 
     let date;
 
     if (week === undefined) {
         date = new Date();
     } else if (!isNaN(week)) {
-        // console.log('a');
         if (week < 0) {
             return res.status(400).json({ message: "Invalid week" });
         }
         date = new Date();
         date.setDate(date.getDate() + week * 7);
-        // console.log('date', date);
     } else {
-        console.log("b");
         date = new Date(date.replace(/-/g, "/"));
         if (date === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
@@ -29,35 +25,55 @@ export function get(req, res) {
         }
     }
 
-    console.log(date);
-
     const [sunday, saturday] = getWeekBounds(date);
-    console.log(sunday, saturday);
 
     db.serialize(() => {
-        db.all(
-            `SELECT * FROM Hour WHERE
-			(Year = ${sunday.getFullYear()} OR Year = ${saturday.getFullYear()})
-			AND (Month = ${sunday.getMonth() + 1} OR Month = ${saturday.getMonth() + 1})
-			AND Day >= ${sunday.getDate()} AND Day <= ${saturday.getDate()}`,
-            (err, hours) => {
-                //
+        db.all("SELECT * FROM Preference", (err, rows) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ message: err.message });
+            }
+
+            if (!rows.length) {
+                return res
+                    .status(400)
+                    .json({ message: "No preferences found" });
+            }
+
+            const { SchedulePreferredHours: schedulePreferredHours } = rows[0];
+
+            const queryHours =
+                schedulePreferredHours === 0
+                    ? `SELECT * FROM Hour WHERE
+                    (Year = ${sunday.getFullYear()} OR Year = ${saturday.getFullYear()})
+                    AND (Month = ${sunday.getMonth() + 1} OR Month = ${
+                          saturday.getMonth() + 1
+                      })
+                    AND Day >= ${sunday.getDate()} AND Day <= ${saturday.getDate()}`
+                    : `SELECT * FROM PreferredHour`;
+
+            db.all(queryHours, (err, hours) => {
                 if (err) {
                     console.log(err);
                     return res.status(500).json({ message: err.message });
                 }
-                console.log(hours);
+
                 const week = getWeekMatrix();
-                hours.forEach(
-                    ({ Day, Hour }) => (week[Day - sunday.getDate()][Hour] = 1)
-                );
+                hours.forEach(({ Day, Hour }) => {
+                    const dayOfWeek =
+                        schedulePreferredHours === 0
+                            ? Day - sunday.getDate()
+                            : Day;
+                    return (week[dayOfWeek][Hour] = 1);
+                });
 
                 res.status(200).json(week);
-            }
-        );
+            });
+        });
     });
 }
 
+// TODO: should remove PreferredHours too?
 export function clearWeek(req, res) {
     let { date } = req.params;
 
