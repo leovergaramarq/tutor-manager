@@ -95,7 +95,9 @@ export default function setSchedule() {
 // week = 0 for this week, 1 for next week
 export async function schedule(week = 1, dateSched, preferences, callback) {
     if (week < 0 || week > 1) {
-        if (callback) callback(400, "Invalid week.");
+        const msg = "Invalid week.";
+        console.log(msg);
+        if (callback) callback(400, msg);
         return;
     }
 
@@ -111,8 +113,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                 return res.status(500).json({ message: err.message });
             }
             if (users.length !== 1) {
-                if (callback) callback(401, "User not found.");
-                return console.log("Users found: " + users.length);
+                const msg = "User not found.";
+                console.log(msg);
+                console.log("Users found: " + users.length);
+                if (callback) callback(401, msg);
+                return;
             }
 
             const { scheduleDelay, scheduleMethod, schedulePreferredHours } =
@@ -133,7 +138,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     const [sunday, saturday] = getWeekBounds(
                         new Date(now.getTime() + week * 604800000)
                     ); // 604800000 = 7 days in case week is 1
-                    console.log("all hours", hours);
+                    // console.log("all hours", hours);
 
                     // filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
                     if (schedulePreferredHours === 0) {
@@ -162,8 +167,10 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     }
 
                     if (!hours.length) {
-                        if (callback) callback(404, "No hours found.");
-                        return console.log("No hours found.");
+                        const msg = "No hours found.";
+                        console.log(msg);
+                        if (callback) callback(404, msg);
+                        return;
                     }
 
                     console.log("hours to schedule", hours);
@@ -179,6 +186,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
+                            args: ["--force-device-scale-factor=0.8"],
                             headless: preferences.puppeteerHeadless
                                 ? true
                                 : false
@@ -215,7 +223,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             // clearTimeout(timeoutFinishSched);
                             timeoutFinishSched = setTimeout(async () => {
                                 timeoutFinishSched = null;
-                                if (week) {
+                                if (week === 1) {
                                     // if next week, click next week button
                                     await page.waitForSelector(
                                         '[name="weekAhead"]'
@@ -245,6 +253,17 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             }, dateSched - date + scheduleDelay);
                         } else {
                             // schedule immediately
+                            if (week === 1) {
+                                // if next week, click next week button
+                                await page.waitForSelector(
+                                    '[name="weekAhead"]'
+                                );
+                                // await sleep(500);
+                                await page.click('[name="weekAhead"]');
+                                // await page.waitForNavigation();
+                                await sleep(100);
+                            }
+
                             finishSchedule(
                                 page,
                                 hours,
@@ -257,7 +276,7 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                         }
                     } catch (err) {
                         console.log(err);
-                        if (callback) callback(500, err.message);
+                        if (callback) callback(500, "Internal server error.");
                     }
                 }
             );
@@ -275,11 +294,17 @@ async function finishSchedule(
     callback
 ) {
     try {
+        await page.evaluate(() => {
+            window.alertOriginal = window.alert;
+            window.alert = () => {};
+        });
+
         await page.waitForSelector("#lblAvailableHours"); // wait for the page to load
         const hoursAvailable = await getHoursAvailable(page);
         if (!hoursAvailable) {
-            if (callback) callback(404, "No hours available.");
-            console.log("No hours available.");
+            const msg = "No hours available.";
+            if (callback) callback(404, msg);
+            console.log(msg);
         } else {
             const count =
                 scheduleMethod === SCHEDULE_BY_ADDING
@@ -291,11 +316,16 @@ async function finishSchedule(
                           cells,
                           hoursAvailable
                       );
-            if (callback)
-                callback(200, `Scheduled ${count}/${hours.length} hours.`);
-            console.log(`Scheduled ${count}/${hours.length} hours.`);
+            const msg = `Scheduled ${count}/${hours.length} hours.`;
+            if (callback) callback(200, msg);
+            console.log(msg);
         }
+
         if (newLogin) saveCookies(await page.cookies());
+        await page.evaluate(() => {
+            window.alert = window.alertOriginal;
+            window.alert("Scheduling finished.");
+        });
     } catch (err) {
         // TODO: should call callback?
         console.log(err);
@@ -307,7 +337,7 @@ async function scheduleByAdding(page, hours, cells) {
 
     const selectToSchedule = async (i) => {
         try {
-            await page.click(`"#cell${cells[i]}`);
+            await page.click(`#cell${cells[i]}`);
         } catch (err) {
             console.log(err);
         }
@@ -350,6 +380,7 @@ async function scheduleByAdding(page, hours, cells) {
 
 async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
     console.log("Please do not hover over the interface"); // otherwise drag and drop will not work
+    let count = 0;
 
     const { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
 
@@ -384,11 +415,11 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         console.log("previouslyScheduled", previouslyScheduled);
 
         const scheduleArea = async (cellFrom, cellTo) => {
-            const selCellFrom = `$cell${cellFrom}`;
+            const selCellFrom = `#cell${cellFrom}`;
             // await page.waitForSelector(selCellFrom);
             const $cellFrom = await page.$(selCellFrom); // if saturday, area should not cover sundays
 
-            const selCellTo = `$cell${cellTo}`;
+            const selCellTo = `#cell${cellTo}`;
             // await page.waitForSelector(selCellTo);
             const $cellTo = await page.$(selCellTo);
 
@@ -466,12 +497,14 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         console.log("toUnschedule", toUnschedule);
 
         let toSchedule = hours.filter((hour) => !hour.scheduled);
-        let count = hours.length - toSchedule.length;
+        count = hours.length - toSchedule.length;
 
         const unschedule = async (unscheduleCountLimit) => {
+            if (!toUnschedule.length) return;
+
             const selectToUnschedule = async (i) => {
                 try {
-                    await page.click("#" + toUnschedule[i]);
+                    await page.click(`#${toUnschedule[i]}`);
                 } catch (err) {
                     console.log(err.message);
                 }
@@ -500,7 +533,11 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
 
             // schedule the missing hours
             console.log("Scheduling the missing hours...");
-            count += await scheduleByAdding(page, toSchedule, cells);
+            const cellsToSchedule = toSchedule.map(
+                ({ Year, Month, Day, Hour }) =>
+                    hourToCell(Year, Month, Day, Hour)
+            );
+            count += await scheduleByAdding(page, toSchedule, cellsToSchedule);
         }
 
         await unschedule();
@@ -519,7 +556,7 @@ async function waitForScheduleButton(page, timeout = 30000) {
                 !document.querySelector("#butProviderUnschedule").disabled, // wait for either button to be enabled
             { timeout }
         );
-        console.log(`Waiting ${timeout / 1000} seconds for buttons...`);
+        // console.log(`Waiting ${timeout / 1000} seconds for buttons...`);
     } catch (err) {
         console.log("Buttons not enabled");
     }
