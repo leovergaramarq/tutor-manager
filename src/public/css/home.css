@@ -26,8 +26,6 @@ section {
 
 .section-user__message {
     font-size: 1.4rem;
-    display: flex;
-    flex-direction: column;
 }
 
 .section-time {

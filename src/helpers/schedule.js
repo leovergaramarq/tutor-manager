@@ -184,7 +184,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
-                            args: ["--force-device-scale-factor=0.8"],
+                            defaultViewport: null,
+                            args: [
+                                "--force-device-scale-factor=0.8",
+                                "--disable-infobars"
+                            ],
                             headless: preferences.puppeteerHeadless
                                 ? true
                                 : false
