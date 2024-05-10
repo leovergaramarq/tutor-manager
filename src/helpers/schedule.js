@@ -5,20 +5,14 @@ import { defPreferences } from "./preferences.js";
 import { save as saveCookies } from "./cookies.js";
 import sleep from "./sleep.js";
 import { getDateFromSunday, getLocalTime, getWeekBounds } from "./week.js";
-import { SCHEDULE_BY_ADDING, SCHEDULE_BY_AREA } from "../config.js";
+import { SCHEDULE_BY_ADDING, SCHEDULE_BY_AREA } from "../constants.js";
+import { decodeBase64 } from "./auth.js";
 
 export default function setSchedule() {
     console.log("Setting schedule...");
     clearInterval(intervalWeekly);
     clearTimeout(timeoutSetSched);
     clearTimeout(timeoutFinishSched);
-
-    // getCellsForAreaSchedule(SCHEDULE_BY_AREA, [
-    //     { HourID: 2, Year: 2024, Month: 5, Day: 8, Hour: 9 },
-    //     { HourID: 4, Year: 2024, Month: 5, Day: 10, Hour: 10 },
-    //     { HourID: 5, Year: 2024, Month: 5, Day: 9, Hour: 7 },
-    //     { HourID: 6, Year: 2024, Month: 5, Day: 9, Hour: 12 }
-    // ]); // test
 
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
@@ -109,8 +103,10 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
     db.serialize(() => {
         db.all("SELECT * FROM User", async (err, users) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
             if (users.length !== 1) {
                 const msg = "User not found.";
@@ -129,8 +125,10 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                     : "SELECT * FROM Hour",
                 async (err, hours) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     // console.log(hours);
                     // get hours for the week
@@ -192,56 +190,96 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                                 : false
                         });
                         const page = await browser.newPage();
-                        if (users[0].Cookies) {
+                        if (users[0]["Cookies"]) {
                             await page.setCookie(
-                                ...JSON.parse(users[0].Cookies)
+                                ...JSON.parse(users[0]["Cookies"])
                             );
                         }
-                        await page.goto(URL_SCHEDULE, { timeout: 0 });
-                        // await page.waitForNavigation();
-                        await sleep(1000);
+                        await page.goto(URL_SCHEDULE, {
+                            timeout: 5000,
+                            waitUntil: ["domcontentloaded", "networkidle0"]
+                        });
+                        // await page.waitForNavigation({
+                        //     waitUntil: "domcontentloaded",
+                        //     timeout: 3000
+                        // });
+                        // await sleep(1000);
+                        // await page.waitForSelector("#butSignIn", {timeout: 1000}); TODO: do this instead of sleep?
 
                         let newLogin;
                         if (!(await page.$("#lblAvailableHours"))) {
                             // if need to login again
                             console.log("Logging in again...");
-                            await page.waitForSelector("#butSignIn");
-                            await page.type("#txtUserName", users[0].Username);
-                            await page.type("#txtPassword", users[0].Password);
+                            await page.waitForSelector("#butSignIn", {
+                                timeout: 3000
+                            });
+                            await page.type(
+                                "#txtUserName",
+                                users[0]["Username"]
+                            );
+                            await page.type(
+                                "#txtPassword",
+                                decodeBase64(users[0]["Password"])
+                            );
                             await sleep(100);
-                            await page.click("#butSignIn");
+                            await Promise.all([
+                                page.click("#butSignIn"),
+                                page.waitForNavigation({
+                                    waitUntil: [
+                                        "domcontentloaded",
+                                        "networkidle0"
+                                    ],
+                                    timeout: 3000
+                                })
+                            ]);
                             newLogin = true;
                             // await page.waitForNavigation();
                         }
 
+                        await page.waitForSelector('[name="weekAhead"]', {
+                            timeout: 3000
+                        });
                         // if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
 
-                        if (dateSched) {
-                            // wait for the hour to schedule
-                            const date = new Date();
+                        const date = new Date();
 
+                        if (dateSched && dateSched > date) {
+                            // wait for the hour to schedule
                             // clearTimeout(timeoutFinishSched);
                             timeoutFinishSched = setTimeout(async () => {
                                 timeoutFinishSched = null;
                                 if (week === 1) {
                                     // if next week, click next week button
-                                    await page.waitForSelector(
-                                        '[name="weekAhead"]'
-                                    );
+                                    // await page.waitForSelector(
+                                    //     '[name="weekAhead"]'
+                                    // );
                                     // await sleep(500);
-                                    await page.click('[name="weekAhead"]');
-                                    // await page.waitForNavigation();
-                                    await sleep(100);
+                                    await Promise.all([
+                                        page.click('[name="weekAhead"]'),
+                                        page.waitForNavigation({
+                                            waitUntil: [
+                                                "domcontentloaded",
+                                                "networkidle0"
+                                            ],
+                                            timeout: 3000
+                                        })
+                                    ]);
+                                    // await sleep(100);
                                 } else {
                                     // otherwise, reload page
                                     await page.reload({
                                         waitUntil: [
-                                            "networkidle0",
-                                            "domcontentloaded"
-                                        ]
+                                            "domcontentloaded",
+                                            "networkidle0"
+                                        ],
+                                        timeout: 3000
+                                        // waitUntil: [
+                                        //     "networkidle0",
+                                        //     "domcontentloaded"
+                                        // ]
                                     });
                                 }
-                                finishSchedule(
+                                await finishSchedule(
                                     page,
                                     hours,
                                     hoursDate,
@@ -255,16 +293,25 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             // schedule immediately
                             if (week === 1) {
                                 // if next week, click next week button
-                                await page.waitForSelector(
-                                    '[name="weekAhead"]'
-                                );
+                                // await page.waitForSelector(
+                                //     '[name="weekAhead"]', {timeout: 1000}
+                                // );
                                 // await sleep(500);
-                                await page.click('[name="weekAhead"]');
+                                await Promise.all([
+                                    page.click('[name="weekAhead"]'),
+                                    page.waitForNavigation({
+                                        waitUntil: [
+                                            "domcontentloaded",
+                                            "networkidle0"
+                                        ],
+                                        timeout: 3000
+                                    })
+                                ]);
                                 // await page.waitForNavigation();
-                                await sleep(100);
+                                // await sleep(100);
                             }
 
-                            finishSchedule(
+                            await finishSchedule(
                                 page,
                                 hours,
                                 hoursDate,
@@ -274,8 +321,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                                 callback
                             );
                         }
+
+                        // await page.close();
+                        // await browser.close();
                     } catch (err) {
-                        console.log(err);
+                        console.error(err);
                         if (callback) callback(500, "Internal server error.");
                     }
                 }
@@ -299,8 +349,9 @@ async function finishSchedule(
             window.alert = () => {};
         });
 
-        await page.waitForSelector("#lblAvailableHours"); // wait for the page to load
+        await page.waitForSelector("#lblAvailableHours", { timeout: 3000 }); // wait for the page to load
         const hoursAvailable = await getHoursAvailable(page);
+
         if (!hoursAvailable) {
             const msg = "No hours available.";
             if (callback) callback(404, msg);
@@ -309,26 +360,28 @@ async function finishSchedule(
             const count =
                 scheduleMethod === SCHEDULE_BY_ADDING
                     ? await scheduleByAdding(page, hours, cells)
-                    : await scheduleByArea(
+                    : scheduleMethod === SCHEDULE_BY_AREA
+                    ? await scheduleByArea(
                           page,
                           hours,
                           hoursDate,
                           cells,
                           hoursAvailable
-                      );
+                      )
+                    : 0;
             const msg = `Scheduled ${count}/${hours.length} hours.`;
             if (callback) callback(200, msg);
             console.log(msg);
         }
 
-        if (newLogin) saveCookies(await page.cookies());
+        if (newLogin) saveCookies(await page.cookies()).catch(console.error);
         await page.evaluate(() => {
             window.alert = window.alertOriginal;
             window.alert("Scheduling finished.");
         });
     } catch (err) {
         // TODO: should call callback?
-        console.log(err);
+        console.error(err);
     }
 }
 
@@ -339,12 +392,12 @@ async function scheduleByAdding(page, hours, cells) {
         try {
             await page.click(`#cell${cells[i]}`);
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     };
 
     try {
-        await page.waitForSelector("#cell0");
+        // await page.waitForSelector("#cell0");
 
         await selectToSchedule(0);
         const { keyboard } = page;
@@ -373,7 +426,7 @@ async function scheduleByAdding(page, hours, cells) {
             (id) => cells.includes(+id.split("cell")[1]) && count++
         );
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
     return count;
 }
@@ -384,7 +437,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
 
     const { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
 
-    await page.waitForSelector("#cell0");
+    // await page.waitForSelector("#cell0");
 
     const getScheduledHours = () =>
         [...document.querySelectorAll(".ui-selecting-finished-FILLED")].map(
@@ -542,7 +595,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
 
         await unschedule();
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
 
     return count;

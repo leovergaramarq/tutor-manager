@@ -9,7 +9,8 @@ import {
     login,
     logout,
     billing,
-    usd
+    usd,
+    validateCredentials
 } from "../controllers/index.controllers.js";
 
 const router = Router();
@@ -19,6 +20,7 @@ router.post("/login", login);
 router.post("/logout", logout);
 router.get("/billing", billing);
 router.get("/usd", usd);
+router.post("/validate-credentials", validateCredentials);
 
 router.use("/user", user);
 router.use("/hours", hour);

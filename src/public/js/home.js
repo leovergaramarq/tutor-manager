@@ -121,9 +121,9 @@ window.addEventListener("load", () => {
                             "Success! Please check results on the Tutor.com website.\n\n" +
                                 data.message
                         );
-                    } catch (error) {
-                        console.error(error);
-                        alert("Error scheduling time\n\n" + error.message);
+                    } catch (err) {
+                        console.error(err);
+                        alert("Error scheduling time\n\n" + err.message);
                     }
                     $buttons.forEach(($button) => ($button.disabled = false));
                 }
@@ -248,8 +248,8 @@ async function saveHours() {
         });
         if (status !== 201) throw new Error(data.message);
         weekMatrix = newWeekMatrix;
-    } catch (error) {
-        console.error(error);
+    } catch (err) {
+        console.error(err);
         return false;
     }
     return true;

@@ -16,7 +16,7 @@ export default function (callback) {
         db.all("SELECT * FROM Preference", (err, rows) => {
             if (err) {
                 if (callback) return callback(err);
-                return console.log(err);
+                return console.error(err);
             }
 
             if (!rows.length) {
@@ -29,7 +29,7 @@ export default function (callback) {
                     (err) => {
                         if (err) {
                             if (callback) return callback(err);
-                            console.log(err);
+                            console.error(err);
                         }
                         if (callback) callback();
                     }
@@ -42,7 +42,7 @@ export default function (callback) {
                 db.run("DELETE FROM Preference", (err) => {
                     if (err) {
                         if (callback) return callback(err);
-                        return console.log(err);
+                        return console.error(err);
                     }
 
                     const {
@@ -61,7 +61,7 @@ export default function (callback) {
                         (err) => {
                             if (err) {
                                 if (callback) return callback(err);
-                                return console.log(err);
+                                return console.error(err);
                             }
                             if (callback) callback();
                         }

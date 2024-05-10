@@ -49,7 +49,7 @@ async function fetchData() {
         console.log(json);
         data = json;
     } catch (err) {
-        console.log(err);
+        console.error(err);
         return alert("Error fetching data");
     }
     // data = {
@@ -78,7 +78,7 @@ async function fetchUSD() {
         console.log(data);
         usd = +data.usd.toFixed(1);
     } catch (err) {
-        console.log(err);
+        console.error(err);
         return alert("Error fetching USD");
     }
 
@@ -137,10 +137,12 @@ function getBonus() {
 }
 
 function loadData() {
-    showLoading();
+    showLoading({
+        belowNavbar: true
+    });
     Promise.all([fetchData(), fetchUSD()])
         .then(hideLoading)
-        .catch((err) => console.error(err));
+        .catch(console.error);
 }
 
 let $minutesWaiting;

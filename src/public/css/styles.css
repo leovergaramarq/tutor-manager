@@ -24,6 +24,10 @@ button {
     font-weight: 600;
 }
 
+.bold {
+    font-weight: 700;
+}
+
 button.btn-primary {
     background-color: var(--primary-color);
     color: var(--white-color);
@@ -188,11 +192,15 @@ input[type="checkbox"] {
 
 .loading {
     position: absolute;
-    top: var(--navbar-height);
+    top: 0;
     left: 0;
     height: 100%;
     width: 100%;
     z-index: 100;
+}
+
+.loading.bellow-navbar {
+    top: var(--navbar-height);
 }
 
 .loading-backdrop {

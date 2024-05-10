@@ -30,8 +30,10 @@ export function get(req, res) {
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
 
             if (!rows.length) {
@@ -54,8 +56,10 @@ export function get(req, res) {
 
             db.all(queryHours, (err, hours) => {
                 if (err) {
-                    console.log(err);
-                    return res.status(500).json({ message: err.message });
+                    console.error(err);
+                    return res
+                        .status(500)
+                        .json({ message: "Internal server error" });
                 }
 
                 const week = getWeekMatrix();
@@ -101,8 +105,10 @@ export function clearWeek(req, res) {
 		`,
             (err) => {
                 if (err) {
-                    console.log(err);
-                    return res.status(500).json({ message: err.message });
+                    console.error(err);
+                    return res
+                        .status(500)
+                        .json({ message: "Internal server error" });
                 }
                 res.status(200).json({ message: "Week cleared" });
             }
@@ -116,8 +122,10 @@ export function schedule(req, res) {
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
 
             if (!rows.length) {

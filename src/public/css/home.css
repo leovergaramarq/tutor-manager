@@ -1,13 +1,22 @@
 main {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    /* grid-template-rows: 1fr 1fr; */
-    grid-auto-flow: column;
-    gap: 12px;
     margin-top: var(--navbar-height);
     min-height: calc(100vh - var(--navbar-height));
+    display: flex;
     padding: 8px 48px;
+    gap: 16px;
     background-color: var(--quaternary-color);
+}
+
+.sections-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 0;
+}
+
+.sections-right {
+    flex-grow: 3;
 }
 
 section {
@@ -15,12 +24,18 @@ section {
     height: min-content;
 }
 
+.section-user__message {
+    font-size: 1.4rem;
+    display: flex;
+    flex-direction: column;
+}
+
 .section-time {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 48px;
-    padding: 32px 0;
+    gap: 32px;
+    /* padding: 32px 0; */
 }
 
 .section-time__item {

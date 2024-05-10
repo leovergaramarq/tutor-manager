@@ -47,13 +47,13 @@ initDB((err) => {
     console.log("Initializing database...");
     if (err) {
         console.log("ERROR: Database not initialized.");
-        return console.log(err);
+        return console.error(err);
     }
     console.log("Initializing preferences...");
     preferences((err) => {
         if (err) {
             console.log("ERROR: Couldn't read preferences.");
-            return console.log(err);
+            return console.error(err);
         }
         console.log("Programming schedule...");
         setSchedule();

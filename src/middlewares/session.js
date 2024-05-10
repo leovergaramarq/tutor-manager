@@ -5,7 +5,7 @@ export function loggedIn(req, res, next) {
     db.serialize(() => {
         db.all("SELECT * FROM User", (err, users) => {
             if (err) {
-                console.log(err);
+                console.error(err);
                 return res
                     .status(500)
                     .render("error", { message: err.message });
@@ -13,7 +13,7 @@ export function loggedIn(req, res, next) {
             if (users.length !== 1) {
                 return res.status(302).redirect("login");
             }
-            req.user = users[0].Username;
+            req.user = users[0]["Username"];
             next();
         });
     });
@@ -23,7 +23,7 @@ export function loggedOut(req, res, next) {
     db.serialize(() => {
         db.all("SELECT * FROM User", (err, users) => {
             if (err) {
-                console.log(err);
+                console.error(err);
                 return res
                     .status(500)
                     .render("error", { message: err.message });

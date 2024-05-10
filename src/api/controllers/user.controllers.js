@@ -7,8 +7,10 @@ export function get(req, res) {
     db.serialize(() => {
         db.all(`SELECT * FROM User`, (err, users) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
             if (users.length !== 1) {
                 return res

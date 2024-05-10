@@ -74,14 +74,14 @@ async function fetchPreferences() {
         return console.error(err);
     }
     preferences = {
-        hourToSchedule: data.HourToSchedule,
-        dayToSchedule: data.DayToSchedule,
-        scheduleAnticipation: data.ScheduleAnticipation,
-        scheduleDelay: data.ScheduleDelay,
-        scheduleMethod: data.ScheduleMethod,
-        schedulePreferredHours: data.SchedulePreferredHours,
-        deadlineMinutesToSchedule: data.DeadlineMinutesToSchedule,
-        puppeteerHeadless: data.PuppeteerHeadless
+        hourToSchedule: data["HourToSchedule"],
+        dayToSchedule: data["DayToSchedule"],
+        scheduleAnticipation: data["ScheduleAnticipation"],
+        scheduleDelay: data["ScheduleDelay"],
+        scheduleMethod: data["ScheduleMethod"],
+        schedulePreferredHours: data["SchedulePreferredHours"],
+        deadlineMinutesToSchedule: data["DeadlineMinutesToSchedule"],
+        puppeteerHeadless: data["PuppeteerHeadless"]
     };
     document.getElementById("dayToSchedule").value = preferences.dayToSchedule;
     const hourToSchedule = String(preferences.hourToSchedule);

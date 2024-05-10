@@ -6,8 +6,10 @@ export function get(req, res) {
     db.serialize(() => {
         db.all("SELECT * FROM PreferredHour", (err, hours) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
             console.log(hours);
             const week = getWeekMatrix();
@@ -41,8 +43,10 @@ export function add(req, res) {
                 `SELECT * FROM PreferredHour WHERE Day = ${day} AND Hour = ${hour}`,
                 (err, rows) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     if (rows.length) {
                         return res
@@ -54,7 +58,7 @@ export function add(req, res) {
                         `INSERT INTO Hour (Day, Hour) VALUES (${day}, ${hour})`,
                         (err) => {
                             if (err) {
-                                console.log(err);
+                                console.error(err);
                                 return res
                                     .status(500)
                                     .json({ message: err.message });
@@ -84,7 +88,7 @@ export function add(req, res) {
                             `SELECT * FROM PreferredHour WHERE Day = ${i} AND Hour = ${j}`,
                             (err, rows) => {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                 }
                                 if (rows?.length) {
                                     count++;
@@ -95,7 +99,7 @@ export function add(req, res) {
                                         `INSERT INTO PreferredHour (Day, Hour) VALUES (${i}, ${j})`,
                                         (err) => {
                                             if (err) {
-                                                console.log(err);
+                                                console.error(err);
                                             }
                                             count++;
                                             if (count === 168)
@@ -112,7 +116,7 @@ export function add(req, res) {
                             `DELETE FROM PreferredHour WHERE Day = ${i} AND Hour = ${j}`,
                             (err) => {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                 }
                                 count++;
                                 if (count === 168)
@@ -136,8 +140,10 @@ export function remove(req, res) {
                 `DELETE FROM PreferredHour WHERE PreferredHourID = ${id}`,
                 (err) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     res.status(200).json({ message: "OK" });
                 }
@@ -156,8 +162,10 @@ export function remove(req, res) {
                 `DELETE FROM PreferredHour WHERE Day = ${day} AND Hour = ${hour}`,
                 (err) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     res.status(200).json({ message: "OK" });
                 }
@@ -170,8 +178,10 @@ export function clearAll(req, res) {
     db.serialize(() => {
         db.run("DELETE FROM PreferredHour", (err) => {
             if (err) {
-                console.log(err);
-                return res.status(500).json({ message: err.message });
+                console.error(err);
+                return res
+                    .status(500)
+                    .json({ message: "Internal server error" });
             }
             res.status(200).json({ message: "OK" });
         });

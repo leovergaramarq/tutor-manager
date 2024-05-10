@@ -29,8 +29,10 @@ export function add(req, res) {
                 [year, month, day, hour],
                 (err, rows) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     if (rows.length) {
                         return res
@@ -42,7 +44,7 @@ export function add(req, res) {
                         `INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hour})`,
                         (err) => {
                             if (err) {
-                                console.log(err);
+                                console.error(err);
                                 return res
                                     .status(500)
                                     .json({ message: err.message });
@@ -89,7 +91,7 @@ export function add(req, res) {
                             `SELECT * FROM Hour WHERE Year = ${year} AND Month = ${month} AND Day = ${day} AND Hour = ${hours}`,
                             (err, rows) => {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                 }
                                 if (rows?.length) {
                                     // hour already exists
@@ -101,7 +103,7 @@ export function add(req, res) {
                                         `INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hours})`,
                                         (err) => {
                                             if (err) {
-                                                console.log(err);
+                                                console.error(err);
                                             }
                                             count++;
                                             if (count === 168)
@@ -118,7 +120,7 @@ export function add(req, res) {
                             `DELETE FROM Hour WHERE Year = ${year} AND Month = ${month} AND Day = ${day} AND Hour = ${hours}`,
                             (err) => {
                                 if (err) {
-                                    console.log(err);
+                                    console.error(err);
                                 }
                                 count++;
                                 if (count === 168)
@@ -140,8 +142,10 @@ export function remove(req, res) {
         db.serialize(() => {
             db.run(`DELETE FROM Hour WHERE HourID = ${id}`, (err) => {
                 if (err) {
-                    console.log(err);
-                    return res.status(500).json({ message: err.message });
+                    console.error(err);
+                    return res
+                        .status(500)
+                        .json({ message: "Internal server error" });
                 }
                 res.status(200).json({ message: "OK" });
             });
@@ -165,8 +169,10 @@ export function remove(req, res) {
                 `DELETE FROM Hour WHERE Year = ${year} AND Month = ${month} AND Day = ${day} AND Hour = ${hour}`,
                 (err) => {
                     if (err) {
-                        console.log(err);
-                        return res.status(500).json({ message: err.message });
+                        console.error(err);
+                        return res
+                            .status(500)
+                            .json({ message: "Internal server error" });
                     }
                     res.status(200).json({ message: "OK" });
                 }

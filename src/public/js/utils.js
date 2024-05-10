@@ -83,8 +83,10 @@ export function getDateToSchedule(
     return dateSched;
 }
 
-export function showLoading() {
-    document.querySelector(".loading").classList.remove("hidden");
+export function showLoading({ belowNavbar } = {}) {
+    const $loading = document.querySelector(".loading");
+    if (belowNavbar) $loading.classList.add("below-navbar");
+    $loading.classList.remove("hidden");
 }
 
 export function hideLoading() {
