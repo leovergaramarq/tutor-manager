@@ -2,7 +2,7 @@ import sqlite3 from "sqlite3";
 import { DB_PATH } from "../../constants.js";
 import { getWeekMatrix } from "../../helpers/week.js";
 
-export function get(req, res) {
+export function get(_, res) {
     db.serialize(() => {
         db.all("SELECT * FROM PreferredHour", (err, hours) => {
             if (err) {
@@ -174,7 +174,7 @@ export function remove(req, res) {
     }
 }
 
-export function clearAll(req, res) {
+export function clearAll(_, res) {
     db.serialize(() => {
         db.run("DELETE FROM PreferredHour", (err) => {
             if (err) {

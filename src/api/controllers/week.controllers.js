@@ -77,7 +77,6 @@ export function get(req, res) {
     });
 }
 
-// TODO: should remove PreferredHours too?
 export function clearWeek(req, res) {
     let { date } = req.params;
 

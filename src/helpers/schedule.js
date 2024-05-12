@@ -34,15 +34,16 @@ export default function setSchedule() {
                 PuppeteerHeadless: puppeteerHeadless
             } = preferences;
 
-            const date = getLocalTime();
-            const dateSched = getDateToSchedule(
-                date,
+            const localDate = getLocalTime();
+            const localDateSched = getDateToSchedule(
+                localDate,
                 dayToSchedule,
                 hourToSchedule,
                 deadlineMinutesToSchedule
             );
 
-            const milisToSched = dateSched - date - scheduleAnticipation;
+            const milisToSched =
+                localDateSched - localDate - scheduleAnticipation;
 
             // clearTimeout(timeoutSetSched);
             timeoutSetSched = setTimeout(() => {
@@ -51,7 +52,7 @@ export default function setSchedule() {
                 // clearInterval(intervalWeekly);
                 intervalWeekly = setInterval(() => {
                     //reset after 7 days
-                    schedule(1, dateSched, {
+                    schedule(1, localDateSched, {
                         scheduleDelay,
                         scheduleMethod,
                         schedulePreferredHours,
@@ -59,8 +60,10 @@ export default function setSchedule() {
                     });
                 }, 604800000);
 
-                console.log(`Unwanted delay: ${(new Date() - date) / 1000}s`);
-                schedule(1, dateSched, {
+                console.log(
+                    `Unwanted delay: ${(new Date() - localDate) / 1000}s`
+                );
+                schedule(1, localDateSched, {
                     scheduleDelay,
                     scheduleMethod,
                     schedulePreferredHours,
@@ -87,7 +90,12 @@ export default function setSchedule() {
 }
 
 // week = 0 for this week, 1 for next week
-export async function schedule(week = 1, dateSched, preferences, callback) {
+export async function schedule(
+    week = 1,
+    localDateSched,
+    preferences,
+    callback
+) {
     if (week < 0 || week > 1) {
         const msg = "Invalid week.";
         console.log(msg);
@@ -130,13 +138,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             .status(500)
                             .json({ message: "Internal server error" });
                     }
-                    // console.log(hours);
-                    // get hours for the week
-                    const now = new Date();
+
+                    let localDate = getLocalTime();
                     const [sunday, saturday] = getWeekBounds(
-                        new Date(now.getTime() + week * 604800000)
+                        new Date(localDate.getTime() + week * 604800000)
                     ); // 604800000 = 7 days in case week is 1
-                    // console.log("all hours", hours);
 
                     // filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
                     if (schedulePreferredHours === 0) {
@@ -150,17 +156,17 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             return (
                                 hourToSched >= sunday &&
                                 hourToSched <= saturday &&
-                                hourToSched >= now
+                                hourToSched >= localDate
                             );
                         });
                     } else {
                         // filter hours greater than now if schedulePreferredHours is true (using table PreferredHour)
                         hours = hours.filter(({ Day, Hour }) => {
                             if (week !== 0) return true;
-                            const nowDay = now.getDay() % 7;
+                            const nowDay = localDate.getDay() % 7;
                             if (Day > nowDay) return true;
                             if (Day < nowDay) return false;
-                            return Hour > now.getHours();
+                            return Hour > localDate.getHours();
                         });
                     }
 
@@ -203,16 +209,11 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                             timeout: 5000,
                             waitUntil: ["domcontentloaded", "networkidle0"]
                         });
-                        // await page.waitForNavigation({
-                        //     waitUntil: "domcontentloaded",
-                        //     timeout: 3000
-                        // });
-                        // await sleep(1000);
-                        // await page.waitForSelector("#butSignIn", {timeout: 1000}); TODO: do this instead of sleep?
 
                         let newLogin;
+
+                        // if need to login again
                         if (!(await page.$("#lblAvailableHours"))) {
-                            // if need to login again
                             console.log("Logging in again...");
                             await page.waitForSelector("#butSignIn", {
                                 timeout: 3000
@@ -237,52 +238,62 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                                 })
                             ]);
                             newLogin = true;
-                            // await page.waitForNavigation();
                         }
 
                         await page.waitForSelector('[name="weekAhead"]', {
                             timeout: 3000
                         });
-                        // if(callback) callback(200, 'Scheduling...'); // if scheduling takes too long, the connection will be closed
 
-                        const date = new Date();
+                        if (week === 1) {
+                            await Promise.all([
+                                page.click('[name="weekAhead"]'),
+                                page.waitForNavigation({
+                                    waitUntil: [
+                                        "domcontentloaded",
+                                        "networkidle0"
+                                    ],
+                                    timeout: 3000
+                                })
+                            ]);
+                        }
 
-                        if (dateSched && dateSched > date) {
+                        localDate = getLocalTime();
+
+                        if (localDateSched > localDate) {
+                            console.log(
+                                localDate.toLocaleTimeString(),
+                                "-",
+                                (localDateSched - localDate + scheduleDelay) /
+                                    1000,
+                                "seconds to schedule (with delay)"
+                            );
+
+                            clearTimeout(timeoutFinishSched);
+                            const wtfTimeout = 2000;
+
                             // wait for the hour to schedule
-                            // clearTimeout(timeoutFinishSched);
                             timeoutFinishSched = setTimeout(async () => {
+                                console.log(
+                                    getLocalTime().toLocaleTimeString(),
+                                    "-",
+                                    "Now!"
+                                );
+
                                 timeoutFinishSched = null;
-                                if (week === 1) {
-                                    // if next week, click next week button
-                                    // await page.waitForSelector(
-                                    //     '[name="weekAhead"]'
-                                    // );
-                                    // await sleep(500);
-                                    await Promise.all([
-                                        page.click('[name="weekAhead"]'),
-                                        page.waitForNavigation({
-                                            waitUntil: [
-                                                "domcontentloaded",
-                                                "networkidle0"
-                                            ],
-                                            timeout: 3000
-                                        })
-                                    ]);
-                                    // await sleep(100);
-                                } else {
-                                    // otherwise, reload page
-                                    await page.reload({
-                                        waitUntil: [
-                                            "domcontentloaded",
-                                            "networkidle0"
-                                        ],
-                                        timeout: 3000
-                                        // waitUntil: [
-                                        //     "networkidle0",
-                                        //     "domcontentloaded"
-                                        // ]
-                                    });
-                                }
+                                // reload page
+                                await page.reload({
+                                    waitUntil: [
+                                        "domcontentloaded",
+                                        "networkidle0"
+                                    ],
+                                    timeout: 3000
+                                });
+
+                                console.log(
+                                    getLocalTime().toLocaleTimeString(),
+                                    "-",
+                                    "Now! x2"
+                                );
                                 await finishSchedule(
                                     page,
                                     hours,
@@ -292,29 +303,9 @@ export async function schedule(week = 1, dateSched, preferences, callback) {
                                     newLogin,
                                     callback
                                 );
-                            }, dateSched - date + scheduleDelay);
+                            }, localDateSched - localDate + scheduleDelay - wtfTimeout);
                         } else {
                             // schedule immediately
-                            if (week === 1) {
-                                // if next week, click next week button
-                                // await page.waitForSelector(
-                                //     '[name="weekAhead"]', {timeout: 1000}
-                                // );
-                                // await sleep(500);
-                                await Promise.all([
-                                    page.click('[name="weekAhead"]'),
-                                    page.waitForNavigation({
-                                        waitUntil: [
-                                            "domcontentloaded",
-                                            "networkidle0"
-                                        ],
-                                        timeout: 3000
-                                    })
-                                ]);
-                                // await page.waitForNavigation();
-                                // await sleep(100);
-                            }
-
                             await finishSchedule(
                                 page,
                                 hours,
@@ -348,19 +339,29 @@ async function finishSchedule(
     callback
 ) {
     try {
-        await page.evaluate(() => {
-            window.alertOriginal = window.alert;
-            window.alert = () => {};
-        });
-
-        await page.waitForSelector("#lblAvailableHours", { timeout: 3000 }); // wait for the page to load
-        const hoursAvailable = await getHoursAvailable(page);
+        // await page.waitForSelector("#lblAvailableHours", { timeout: 3000 });
+        let hoursAvailable = await getHoursAvailable(page);
 
         if (!hoursAvailable) {
-            const msg = "No hours available.";
+            console.log('No available hours. Reloading...');
+            await page.reload({
+                waitUntil: ["domcontentloaded", "networkidle0"],
+                timeout: 3000
+            });
+            // await page.waitForSelector("#lblAvailableHours", { timeout: 3000 });
+            hoursAvailable = await getHoursAvailable(page);
+        }
+
+        if (!hoursAvailable) {
+            const msg = "No available hours.";
             if (callback) callback(404, msg);
             console.log(msg);
         } else {
+            await page.evaluate(() => {
+                window.alertOriginal = window.alert;
+                window.alert = () => {};
+            });
+
             const count =
                 scheduleMethod === SCHEDULE_BY_ADDING
                     ? await scheduleByAdding(page, hours, cells)
@@ -373,18 +374,19 @@ async function finishSchedule(
                           hoursAvailable
                       )
                     : 0;
+
+            page.evaluate(() => {
+                window.alert = window.alertOriginal;
+                window.alert("Scheduling finished.");
+            }).catch(console.error);
+
             const msg = `Scheduled ${count}/${hours.length} hours.`;
             if (callback) callback(200, msg);
             console.log(msg);
         }
 
         if (newLogin) saveCookies(await page.cookies()).catch(console.error);
-        await page.evaluate(() => {
-            window.alert = window.alertOriginal;
-            window.alert("Scheduling finished.");
-        });
     } catch (err) {
-        // TODO: should call callback?
         console.error(err);
     }
 }

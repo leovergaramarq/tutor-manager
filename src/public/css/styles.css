@@ -199,7 +199,7 @@ input[type="checkbox"] {
     z-index: 100;
 }
 
-.loading.bellow-navbar {
+.loading.below-navbar {
     top: var(--navbar-height);
 }
 
