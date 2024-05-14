@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "build-exe-win": "pkg -t node16-win-x64 -o dist/TutorManager.exe build/lib/index.js"
   },
   "dependencies": {
     "dotenv": "16.4.5",
@@ -17,6 +18,11 @@
   },
   "type": "module",
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "@babel/plugin-transform-modules-commonjs": "^7.24.1",
+    "nodemon": "^2.0.20",
+    "pkg": "^5.8.1"
+  },
+  "eslintConfig": {
+    "plugins": ["@babel/plugin-transform-modules-commonjs"]
   }
 }

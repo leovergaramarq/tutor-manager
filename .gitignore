@@ -25,3 +25,5 @@ yarn-error.log*
 /db/db.sqlite3
 .env
 package-lock.json
+
+/dist

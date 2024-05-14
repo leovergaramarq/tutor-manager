@@ -19,27 +19,20 @@ export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing
 
-await config();
+config();
 
-export async function config({ newPort } = {}) {
-    if (newPort) await writePort(newPort);
+export function config({ newPort } = {}) {
+    if (newPort) writePort(newPort);
     dotenv.config();
     PORT = process.env.PORT;
 }
 
-async function writePort(port) {
+function writePort(port) {
     const pathFile = path.join(__dirname, ".env");
     const data = `PORT="${port}"`;
 
     try {
-        await new Promise((res, rej) => {
-            fs.writeFile(pathFile, data, (err) => {
-                if (err) {
-                    return rej(err);
-                }
-                res();
-            });
-        });
+        fs.writeFileSync(pathFile, data);
     } catch (err) {
         console.error(err);
     }
