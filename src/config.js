@@ -1,4 +1,9 @@
-export const PORT = process.env.PORT || 5000;
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { __dirname } from "./constants.js";
+
+export let PORT;
 
 // preferences
 export const DEADLINE_MINUTES_TO_SCHEDULE = 60; // schedule if 60 mimnutes have not passed since the hour
@@ -13,3 +18,29 @@ export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing
+
+await config();
+
+export async function config({ newPort } = {}) {
+    if (newPort) await writePort(newPort);
+    dotenv.config();
+    PORT = process.env.PORT;
+}
+
+async function writePort(port) {
+    const pathFile = path.join(__dirname, ".env");
+    const data = `PORT="${port}"`;
+
+    try {
+        await new Promise((res, rej) => {
+            fs.writeFile(pathFile, data, (err) => {
+                if (err) {
+                    return rej(err);
+                }
+                res();
+            });
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}

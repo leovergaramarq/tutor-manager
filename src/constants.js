@@ -1,9 +1,10 @@
 import path from "path";
-import { fileURLToPath } from "url";
+// import { fileURLToPath } from "url";
 
-export const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// export const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export const __dirname = process.cwd();
 
-export const DB_PATH = path.join(__dirname, "../", "db", "db.sqlite3");
+export const DB_PATH = path.join(__dirname, "db", "db.sqlite3");
 
 export const SCHEDULE_INTERVAL = "scheduleInterval";
 export const SCHEDULE_TIMEOUT = "scheduleTimeout";

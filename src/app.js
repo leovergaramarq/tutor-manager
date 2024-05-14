@@ -1,6 +1,5 @@
 import express from "express";
 import morgan from "morgan";
-import cors from "cors";
 import hbs from "express-handlebars";
 import path from "path";
 
@@ -18,7 +17,6 @@ const app = express();
 
 app.set("json spaces", 2);
 app.use(morgan("dev"));
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));

@@ -343,7 +343,7 @@ async function finishSchedule(
         let hoursAvailable = await getHoursAvailable(page);
 
         if (!hoursAvailable) {
-            console.log('No available hours. Reloading...');
+            console.log("No available hours. Reloading...");
             await page.reload({
                 waitUntil: ["domcontentloaded", "networkidle0"],
                 timeout: 3000
