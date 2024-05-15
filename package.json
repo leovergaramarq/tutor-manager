@@ -1,6 +1,6 @@
 {
   "name": "tutor-manager",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Tutor.com auto scheduler and facilitator of billing information",
   "private": true,
   "scripts": {
