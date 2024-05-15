@@ -1,4 +1,4 @@
-{{> navbar jsTypeModule=jsTypeModule }}
+{{> navbar }}
 {{> loading }}
 <main>
     <section class="section-payment">
@@ -109,8 +109,4 @@
     </div>
 </main>
 
-{{#if jsTypeModule}}
-    <script type="module" src="/js/billing.js"></script>
-{{else}}
-    <script src="/js/billing.js"></script>
-{{/if}}
+<script type="module" src="/js/billing.js"></script>

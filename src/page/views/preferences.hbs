@@ -1,4 +1,4 @@
-{{> navbar jsTypeModule=jsTypeModule }}
+{{> navbar }}
 <main>
     <div class="container">
         <h1>Preference Settings</h1>
@@ -91,8 +91,4 @@
     </div>
 </main>
 
-{{#if jsTypeModule}}
-    <script type="module" src="/js/preferences.js"></script>
-{{else}}
-    <script src="/js/preferences.js"></script>
-{{/if}}
+<script type="module" src="/js/preferences.js"></script>
