@@ -1,4 +1,5 @@
 import prompts from "prompts";
+import createApp from "./app.js";
 import { config, PORT } from "./config.js";
 import net from "net";
 
@@ -28,8 +29,7 @@ function startServer(app) {
 }
 
 async function initApp(port) {
-    const module = await import("./app.js");
-    const app = module.default;
+    const app = createApp();
     if (port) app.set(PORT_KEY, port);
     return app;
 }

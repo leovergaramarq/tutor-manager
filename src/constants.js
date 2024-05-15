@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 
 export const __dirname = process.cwd();
 
@@ -17,3 +18,11 @@ export const URL_USD = "https://www.google.com/finance/quote/USD-COP";
 
 export const SCHEDULE_BY_ADDING = 0;
 export const SCHEDULE_BY_AREA = 1;
+
+export const jsType = getJsType();
+
+function getJsType() {
+    const result = fs.readFileSync(path.join(__dirname, "package.json"));
+    const json = JSON.parse(result);
+    return json.type;
+}

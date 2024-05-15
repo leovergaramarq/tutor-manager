@@ -1,4 +1,8 @@
 <div class="calendar">
 </div>
 
-<script type="module" src="/js/calendar.js"></script>
+{{#if jsTypeModule}}
+    <script type="module" src="/js/calendar.js"></script>
+{{else}}
+    <script src="/js/calendar.js"></script>
+{{/if}}

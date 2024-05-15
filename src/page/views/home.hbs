@@ -1,4 +1,4 @@
-{{> navbar }}
+{{> navbar jsTypeModule=jsTypeModule }}
 
 <main>
     <div class="sections-left">
@@ -41,9 +41,13 @@
                 <div class="section-calendar__header__title">Current week</div>
                 <i class="section-calendar__header__arrow arrow-right fas fa-chevron-right"></i>
             </div>
-            {{> calendar }}
+            {{> calendar jsTypeModule=jsTypeModule}}
         </section>
     </div>
 </main>
 
-<script type="module" src="/js/home.js"></script>
+{{#if jsTypeModule}}
+    <script type="module" src="/js/home.js"></script>
+{{else}}
+    <script src="/js/home.js"></script>
+{{/if}}

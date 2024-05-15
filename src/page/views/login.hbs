@@ -12,4 +12,8 @@
     </div>
 </main>
 
-<script type="module" src="/js/login.js"></script>
+{{#if jsTypeModule}}
+    <script type="module" src="/js/login.js"></script>
+{{else}}
+    <script src="/js/login.js"></script>
+{{/if}}

@@ -11,51 +11,52 @@ import initDB from "./helpers/initDB.js";
 
 import { __dirname } from "./constants.js";
 
-// app setup
+export default function () {
+    // app setup
+    const app = express();
 
-const app = express();
+    app.set("json spaces", 2);
+    app.use(morgan("dev"));
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(express.static(path.join(__dirname, "src", "public")));
 
-app.set("json spaces", 2);
-app.use(morgan("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+    // view engine setup
+    app.set("views", path.join(__dirname, "src", "page", "views"));
+    app.engine(
+        ".hbs",
+        hbs.create({
+            layoutsDir: path.join(app.get("views"), "layouts"),
+            partialsDir: path.join(app.get("views"), "partials"),
+            defaultLayout: "main",
+            extname: ".hbs"
+        }).engine
+    );
+    app.set("view engine", ".hbs");
 
-// view engine setup
-app.set("views", path.join(__dirname, "page", "views"));
-app.engine(
-    ".hbs",
-    hbs.create({
-        layoutsDir: path.join(app.get("views"), "layouts"),
-        partialsDir: path.join(app.get("views"), "partials"),
-        defaultLayout: "main",
-        extname: ".hbs"
-    }).engine
-);
-app.set("view engine", ".hbs");
+    // routes
+    app.use("/api", apiRouter);
+    app.use("/", pageRouter);
 
-// routes
-app.use("/api", apiRouter);
-app.use("/", pageRouter);
+    // error handler
+    // app.use((_, res) => res.status(404).render('404'));
 
-// error handler
-// app.use((_, res) => res.status(404).render('404'));
-
-initDB((err) => {
-    console.log("Initializing database...");
-    if (err) {
-        console.log("ERROR: Database not initialized.");
-        return console.error(err);
-    }
-    console.log("Initializing preferences...");
-    preferences((err) => {
+    initDB((err) => {
+        console.log("Initializing database...");
         if (err) {
-            console.log("ERROR: Couldn't read preferences.");
+            console.log("ERROR: Database not initialized.");
             return console.error(err);
         }
-        console.log("Programming schedule...");
-        setSchedule();
+        console.log("Initializing preferences...");
+        preferences((err) => {
+            if (err) {
+                console.log("ERROR: Couldn't read preferences.");
+                return console.error(err);
+            }
+            console.log("Programming schedule...");
+            setSchedule();
+        });
     });
-});
 
-export default app;
+    return app;
+}
