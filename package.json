@@ -1,13 +1,14 @@
 {
-  "name": "backend",
+  "name": "tutor-manager",
   "version": "0.0.0",
+  "description": "Tutor.com auto scheduler and facilitator of billing information",
   "private": true,
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "build": "cross-env BUILD_ACTION=clean_build node build-helper.js && babel src/ -d build/src/ && cpy src/page/views/ build/ && cpy src/public/ build/ && cpy db/db.sqlite3.sql build/ && cpy node_modules/ build/ && cross-env BUILD_ACTION=package_json node build-helper.js",
-    "build:win": "npx nexe build/src/ -r build/node_modules/**/* -r build/db/db.sqlite3.sql --verbose -t x86-8.0.0 -o dist/TutorManager.exe",
-    "build:pkg": "pkg build/src/index.js -t node16-win-x64 -o dist/TutorManager.exe"
+    "build:exe": "pkg .",
+    "dist": "npm run build && npm run build:exe"
   },
   "dependencies": {
     "dotenv": "16.4.5",
@@ -28,5 +29,12 @@
     "cross-env": "^7.0.3",
     "nodemon": "^2.0.20",
     "pkg": "^5.8.1"
-  }
+  },
+  "pkg": {
+    "targets": [
+      "node16-win-x64"
+    ],
+    "outputPath": "build/"
+  },
+  "bin": "build/src/index.js"
 }

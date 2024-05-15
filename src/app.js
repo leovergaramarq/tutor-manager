@@ -1,6 +1,6 @@
 import express from "express";
 import morgan from "morgan";
-import hbs from "express-handlebars";
+import { create as createHbs } from "express-handlebars";
 import path from "path";
 
 import apiRouter from "./api/routes/index.routes.js";
@@ -25,7 +25,7 @@ export default function () {
     app.set("views", path.join(__dirname, "src", "page", "views"));
     app.engine(
         ".hbs",
-        hbs.create({
+        createHbs({
             layoutsDir: path.join(app.get("views"), "layouts"),
             partialsDir: path.join(app.get("views"), "partials"),
             defaultLayout: "main",
