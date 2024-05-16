@@ -43,7 +43,7 @@ section {
     gap: 8px;
 }
 .section-time__item__title {
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .section-time__item__time {
@@ -51,7 +51,7 @@ section {
 }
 
 .section-time__item__timezone {
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .section-schedule {

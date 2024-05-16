@@ -7,6 +7,7 @@ import sleep from "./sleep.js";
 import { getDateFromSunday, getLocalTime, getWeekBounds } from "./week.js";
 import { SCHEDULE_BY_ADDING, SCHEDULE_BY_AREA } from "../constants.js";
 import { decodeBase64 } from "./auth.js";
+import { PUPPETEER_EXEC_PATH } from "../config.js";
 
 export default function setSchedule() {
     console.log("Setting schedule...");
@@ -362,7 +363,7 @@ async function finishSchedule(
             console.log(msg);
 
             page.evaluate(() => {
-                window.alert(msg);
+                window.alert("No available hours.");
             }).catch(console.error);
         } else {
             await page.evaluate(() => {
