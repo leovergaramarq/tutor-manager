@@ -25,7 +25,7 @@ section {
 }
 
 .section-user__message {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
 }
 
 .section-time {
@@ -43,15 +43,15 @@ section {
     gap: 8px;
 }
 .section-time__item__title {
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .section-time__item__time {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
 }
 
 .section-time__item__timezone {
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .section-schedule {
