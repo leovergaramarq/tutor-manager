@@ -190,6 +190,10 @@ export async function schedule(
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
+                            executablePath:
+                                PUPPETEER_EXEC_PATH !== ""
+                                    ? PUPPETEER_EXEC_PATH
+                                    : undefined,
                             defaultViewport: null,
                             args: [
                                 "--force-device-scale-factor=0.8",
@@ -356,6 +360,10 @@ async function finishSchedule(
             const msg = "No available hours.";
             if (callback) callback(404, msg);
             console.log(msg);
+
+            page.evaluate(() => {
+                window.alert(msg);
+            }).catch(console.error);
         } else {
             await page.evaluate(() => {
                 window.alertOriginal = window.alert;
@@ -622,10 +630,12 @@ async function waitForScheduleButton(page, timeout = 30000) {
 }
 
 function getHoursAvailable(page) {
-    return page.evaluate(
-        () =>
-            +document.querySelector("#lblAvailableHours").textContent -
-            +document.querySelector("#lblScheduledHours").textContent
+    return (
+        page.evaluate(
+            () =>
+                +document.querySelector("#lblAvailableHours")?.textContent -
+                +document.querySelector("#lblScheduledHours")?.textContent
+        ) || 0
     );
 }
 

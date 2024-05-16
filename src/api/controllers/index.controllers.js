@@ -4,6 +4,7 @@ import sleep from "../../helpers/sleep.js";
 import { DB_PATH, URL_BILLING, URL_USD } from "../../constants.js";
 import { save as saveCookies } from "../../helpers/cookies.js";
 import { decodeBase64, encodeBase64 } from "../../helpers/auth.js";
+import { PUPPETEER_EXEC_PATH } from "../../config.js";
 
 export function hello(_, res) {
     db.serialize(() => {
@@ -131,14 +132,18 @@ export function billing(_, res) {
 
             try {
                 // start puppeteer
-                // const browser = await puppeteer.launch({ headless: false });
-                const browser = await puppeteer.launch();
+                const browser = await puppeteer.launch({
+                    executablePath:
+                        PUPPETEER_EXEC_PATH !== ""
+                            ? PUPPETEER_EXEC_PATH
+                            : undefined
+                });
                 const page = await browser.newPage();
 
                 if (users[0]["Cookies"]) {
                     await page.setCookie(...JSON.parse(users[0]["Cookies"]));
                 }
-                
+
                 await page.goto(URL_BILLING, {
                     timeout: 5000,
                     waitUntil: ["domcontentloaded", "networkidle0"]
@@ -157,14 +162,17 @@ export function billing(_, res) {
                     await sleep(100);
                     await page.click("#butSignIn");
                 }
-                
+
                 await page.waitForSelector("#otherPanel", { timeout: 3000 });
 
                 const data = await page.$eval("tr:nth-child(2)", (el) => ({
-                    scheduledHours: +el.children[2].innerText,
-                    onlineHours: +el.children[3].innerText,
-                    minutesWaiting: +el.children[8].innerText.replace(/,/g, ""),
-                    minutesInSession: +el.children[9].innerText.replace(
+                    scheduledHours: +el.children[2]?.textContent,
+                    onlineHours: +el.children[3]?.textContent,
+                    minutesWaiting: +el.children[8]?.textContent.replace(
+                        /,/g,
+                        ""
+                    ),
+                    minutesInSession: +el.children[9]?.textContent.replace(
                         /,/g,
                         ""
                     )
@@ -187,8 +195,10 @@ export function billing(_, res) {
 export async function usd(_, res) {
     try {
         // start puppeteer
-        // const browser = await puppeteer.launch({ headless: false });
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+            executablePath:
+                PUPPETEER_EXEC_PATH !== "" ? PUPPETEER_EXEC_PATH : undefined
+        });
         const page = await browser.newPage();
         await page.goto(URL_USD, {
             timeout: 5000,
@@ -202,7 +212,7 @@ export async function usd(_, res) {
         const sel = ".YMlKec.fxKbKc";
         await page.waitForSelector(sel, { timeout: 3000 });
         const data = await page.$eval(sel, (el) => ({
-            usd: +el.textContent.replace(/,/g, "")
+            usd: +el?.textContent.replace(/,/g, "")
         }));
 
         res.status(200).json(data);
@@ -244,8 +254,12 @@ export async function validateCredentials(req, res) {
 
             try {
                 // start puppeteer
-                // const browser = await puppeteer.launch({ headless: false });
-                const browser = await puppeteer.launch();
+                const browser = await puppeteer.launch({
+                    executablePath:
+                        PUPPETEER_EXEC_PATH !== ""
+                            ? PUPPETEER_EXEC_PATH
+                            : undefined
+                });
                 const page = await browser.newPage();
 
                 await page.goto(URL_BILLING, {

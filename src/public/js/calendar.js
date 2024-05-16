@@ -72,8 +72,8 @@ $tbody.addEventListener("mouseup", (e) => {
             yCells += yStep;
 
             const selectedCells = [];
-            for (let i = 0; i != yCells; i += yStep) {
-                for (let j = 0; j != xCells; j += xStep) {
+            for (let i = 0; i !== yCells; i += yStep) {
+                for (let j = 0; j !== xCells; j += xStep) {
                     const id = min + i * 7 + j;
                     selectedCells.push(document.getElementById(`cell${id}`));
                 }

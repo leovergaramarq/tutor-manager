@@ -1,17 +1,56 @@
-import prompts from "prompts";
-import createApp from "./app.js";
-import { config, PORT } from "./config.js";
+import fs from "fs";
 import net from "net";
+import puppeteer from "puppeteer";
+import createApp from "./app.js";
+import {
+    config,
+    PORT,
+    promptPort,
+    promptPuppeteerExecPath,
+    PUPPETEER_EXEC_PATH
+} from "./config.js";
 
 const PORT_KEY = "port";
 
 run();
 
-function run(errPort) {
-    getPort(errPort)
-        .then((port) => initApp(port))
-        .then((app) => startServer(app))
-        .catch(console.error);
+function run() {
+    (async () => {
+        console.log("======================================");
+        console.log("=                                    =");
+        console.log("=            Tutor Manager           =");
+        console.log("=                                    =");
+        console.log("======================================");
+        console.log();
+
+        console.log("Notes:");
+        console.log(
+            "1. You may edit/delete the .env file to modify/reset the configuration"
+        );
+        console.log(
+            "2. You may also delete the ./db/db.sqlite3 file to reset the database (user, preferences, etc.)"
+        );
+        console.log();
+
+        try {
+            console.log("=========== Configuration ===========");
+
+            const port = await getPort();
+            console.log();
+            const puppeteerExecPath = await getPuppeteerExecPath();
+
+            config({ port, puppeteerExecPath });
+
+            console.log("Configuration complete");
+            console.log("=====================================");
+            console.log();
+
+            const app = await initApp(port);
+            startServer(app);
+        } catch (err) {
+            console.error(err);
+        }
+    })();
 }
 
 function startServer(app) {
@@ -34,20 +73,13 @@ async function initApp(port) {
     return app;
 }
 
-async function getPort(errPrev) {
+async function getPort() {
     let port;
-    let newPort = false;
+    let errPrev;
 
     while (true) {
         if (errPrev || PORT === undefined) {
-            const result = await prompts({
-                type: "number",
-                name: "port",
-                message: "Enter port number",
-                initial: 5000
-            });
-            port = result.port;
-            if (!newPort) newPort = true;
+            port = await promptPort();
         } else {
             port = PORT;
         }
@@ -80,7 +112,47 @@ async function getPort(errPrev) {
         }
     }
 
-    if (newPort) config({ newPort: port });
-
     return port;
+}
+
+async function getPuppeteerExecPath() {
+    let puppeteerExecPath;
+    let errPrev;
+
+    while (true) {
+        if (errPrev || PUPPETEER_EXEC_PATH === undefined) {
+            if (puppeteerExecPath === undefined) {
+                console.log(
+                    [
+                        "This app works with Puppeteer for web scrapping. You need either:",
+                        '1. the path to a Chromium-based browser\'s executable in your system (Chrome, Edge, etc.) - e.g. "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"',
+                        '2. or puppeteer installed in your system (in folder "C:\\Users\\<your_user>\\.cache\\puppeteer") - see https://pptr.dev/guides/installation'
+                    ].join("\n")
+                );
+                console.log();
+            }
+            puppeteerExecPath = await promptPuppeteerExecPath();
+        } else {
+            puppeteerExecPath = PUPPETEER_EXEC_PATH;
+        }
+
+        try {
+            if (puppeteerExecPath !== "") {
+                await fs.promises.access(puppeteerExecPath, fs.constants.X_OK);
+            }
+
+            const browser = await puppeteer.launch({
+                headless: true,
+                executablePath:
+                    puppeteerExecPath !== "" ? puppeteerExecPath : undefined
+            });
+            await browser.close();
+            break;
+        } catch (err) {
+            console.error("Invalid path. Please verify it exists.");
+            errPrev = err;
+        }
+    }
+
+    return puppeteerExecPath;
 }

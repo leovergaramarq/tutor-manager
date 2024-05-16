@@ -1,9 +1,11 @@
+import prompts from "prompts";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { __dirname } from "./constants.js";
 
 export let PORT;
+export let PUPPETEER_EXEC_PATH;
 
 // preferences
 export const DEADLINE_MINUTES_TO_SCHEDULE = 60; // schedule if 60 mimnutes have not passed since the hour
@@ -21,19 +23,47 @@ process.env.TZ = "America/New_York";
 
 config();
 
-export function config({ newPort } = {}) {
-    if (newPort) writePort(newPort);
+export function config(newConfig) {
+    if (newConfig && Object.keys(newConfig).length) {
+        const { port, puppeteerExecPath } = newConfig;
+        const pathFile = path.join(__dirname, ".env");
+        const dataList = [];
+
+        if (port !== undefined) dataList.push(`PORT="${port}"`);
+        if (puppeteerExecPath !== undefined)
+            dataList.push(`PUPPETEER_EXEC_PATH="${puppeteerExecPath}"`);
+
+        const data = dataList.join("\n");
+
+        try {
+            fs.writeFileSync(pathFile, data);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     dotenv.config();
     PORT = process.env.PORT;
+    PUPPETEER_EXEC_PATH = process.env.PUPPETEER_EXEC_PATH;
 }
 
-function writePort(port) {
-    const pathFile = path.join(__dirname, ".env");
-    const data = `PORT="${port}"`;
+export async function promptPort() {
+    const { port } = await prompts({
+        type: "number",
+        name: "port",
+        message: "Enter port number",
+        initial: 5000
+    });
+    return port;
+}
 
-    try {
-        fs.writeFileSync(pathFile, data);
-    } catch (err) {
-        console.error(err);
-    }
+export async function promptPuppeteerExecPath() {
+    const { puppeteerExecPath } = await prompts({
+        type: "text",
+        name: "puppeteerExecPath",
+        message:
+            'Enter puppeteer executable path (leave empty to use default "C:\\Users\\<your_user>\\.cache\\puppeteer")',
+        initial: ""
+    });
+    return puppeteerExecPath.trim();
 }
