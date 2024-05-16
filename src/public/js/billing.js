@@ -50,7 +50,7 @@ async function fetchData() {
         data = json;
     } catch (err) {
         console.error(err);
-        return alert("Error fetching data");
+        return alert("Error fetching billing data");
     }
     // data = {
     //     scheduledHours: Math.floor(Math.random() * 100),
@@ -79,7 +79,7 @@ async function fetchUSD() {
         usd = +data.usd.toFixed(1);
     } catch (err) {
         console.error(err);
-        return alert("Error fetching USD");
+        return alert("Error fetching USD data");
     }
 
     // usd = 4700;

@@ -43,8 +43,8 @@ async function getPort(errPrev) {
             const result = await prompts({
                 type: "number",
                 name: "port",
-                message: "Enter port number (e.g. 5000)"
-                // initial: 5000
+                message: "Enter port number",
+                initial: 5000
             });
             port = result.port;
             if (!newPort) newPort = true;

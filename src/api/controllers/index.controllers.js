@@ -134,15 +134,15 @@ export function billing(_, res) {
                 // const browser = await puppeteer.launch({ headless: false });
                 const browser = await puppeteer.launch();
                 const page = await browser.newPage();
+
                 if (users[0]["Cookies"]) {
                     await page.setCookie(...JSON.parse(users[0]["Cookies"]));
                 }
+                
                 await page.goto(URL_BILLING, {
                     timeout: 5000,
                     waitUntil: ["domcontentloaded", "networkidle0"]
                 });
-                // await page.waitForNavigation();
-                // await sleep(1000);
 
                 let newLogin;
                 if (!(await page.$("#otherPanel"))) {
@@ -156,9 +156,8 @@ export function billing(_, res) {
                     );
                     await sleep(100);
                     await page.click("#butSignIn");
-                    // await sleep(500);
-                    // await page.waitForNavigation();
                 }
+                
                 await page.waitForSelector("#otherPanel", { timeout: 3000 });
 
                 const data = await page.$eval("tr:nth-child(2)", (el) => ({
