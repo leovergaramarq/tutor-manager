@@ -1,15 +1,22 @@
 import puppeteer from "puppeteer";
-import sqlite3 from "sqlite3";
-import { DB_PATH, URL_SCHEDULE } from "../constants.js";
-import { defPreferences } from "./preferences.js";
-import { save as saveCookies } from "./cookies.js";
-import sleep from "./sleep.js";
-import { getDateFromSunday, getLocalTime, getWeekBounds } from "./week.js";
-import { SCHEDULE_BY_ADDING, SCHEDULE_BY_AREA } from "../constants.js";
-import { decodeBase64 } from "./auth.js";
-import { PUPPETEER_EXEC_PATH } from "../config.js";
+import { db } from "../config/db.config.js";
+import { URL_SCHEDULE } from "../config/constants.config.js";
+import { defPreferences } from "../config/preferences.config.js";
+import { save as saveCookies } from "./cookies.service.js";
+import { sleep } from "../helpers/utils.helper.js";
+import {
+    getDateFromSunday,
+    getLocalTime,
+    getWeekBounds
+} from "../helpers/utils.helper.js";
+import {
+    SCHEDULE_BY_ADDING,
+    SCHEDULE_BY_AREA
+} from "../config/constants.config.js";
+import { decodeBase64 } from "./auth.service.js";
+import { PUPPETEER_EXEC_PATH } from "../config/general.config.js";
 
-export default function setSchedule() {
+export function setSchedule() {
     console.log("Setting schedule...");
     clearInterval(intervalWeekly);
     clearTimeout(timeoutSetSched);
@@ -97,6 +104,11 @@ export async function schedule(
     preferences,
     callback
 ) {
+    console.log(
+        getLocalTime().toLocaleTimeString(),
+        "-",
+        "Start schedule method"
+    );
     if (week < 0 || week > 1) {
         const msg = "Invalid week.";
         console.log(msg);
@@ -124,7 +136,11 @@ export async function schedule(
                 if (callback) callback(401, msg);
                 return;
             }
-
+            console.log(
+                getLocalTime().toLocaleTimeString(),
+                "-",
+                "Database User query successful."
+            );
             const { scheduleDelay, scheduleMethod, schedulePreferredHours } =
                 preferences;
 
@@ -139,7 +155,11 @@ export async function schedule(
                             .status(500)
                             .json({ message: "Internal server error" });
                     }
-
+                    console.log(
+                        getLocalTime().toLocaleTimeString(),
+                        "-",
+                        "Database Hour query successful."
+                    );
                     let localDate = getLocalTime();
                     const [sunday, saturday] = getWeekBounds(
                         new Date(localDate.getTime() + week * 604800000)
@@ -170,7 +190,11 @@ export async function schedule(
                             return Hour > localDate.getHours();
                         });
                     }
-
+                    console.log(
+                        getLocalTime().toLocaleTimeString(),
+                        "-",
+                        "Hours filtered."
+                    );
                     if (!hours.length) {
                         const msg = "No hours found.";
                         console.log(msg);
@@ -187,7 +211,11 @@ export async function schedule(
                     const cells = hours.map(({ Year, Month, Day, Hour }) =>
                         hourToCell(Year, Month, Day, Hour)
                     );
-
+                    console.log(
+                        getLocalTime().toLocaleTimeString(),
+                        "-",
+                        "Cells calculated."
+                    );
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
@@ -204,17 +232,31 @@ export async function schedule(
                                 ? true
                                 : false
                         });
+                        console.log(
+                            getLocalTime().toLocaleTimeString(),
+                            "-",
+                            "Puppeteer launched."
+                        );
                         const page = await browser.newPage();
                         if (users[0]["Cookies"]) {
                             await page.setCookie(
                                 ...JSON.parse(users[0]["Cookies"])
                             );
                         }
+                        console.log(
+                            getLocalTime().toLocaleTimeString(),
+                            "-",
+                            "Page created."
+                        );
                         await page.goto(URL_SCHEDULE, {
                             timeout: 5000,
                             waitUntil: ["domcontentloaded", "networkidle0"]
                         });
-
+                        console.log(
+                            getLocalTime().toLocaleTimeString(),
+                            "-",
+                            "Page loaded."
+                        );
                         let newLogin;
 
                         // if need to login again
@@ -450,7 +492,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
     console.log("Please do not hover over the interface"); // otherwise drag and drop will not work
     let count = 0;
 
-    const { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
+    let { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
 
     // await page.waitForSelector("#cell0");
 
@@ -651,7 +693,7 @@ function getDateToSchedule(
 
     const dateSched = new Date(date);
     dateSched.setDate(day);
-    dateSched.setHours(hour, 0, 0, 0);
+    dateSched.setHours(hour, 48, 0, 0);
 
     if ((date - dateSched) / 60000 > deadlineMinutesToSchedule) {
         // if the hour to schedule is in the past, schedule for next week
@@ -717,5 +759,4 @@ function clearTimeout(timeout) {
     }
 }
 
-const db = new (sqlite3.verbose().Database)(DB_PATH);
 let timeoutSetSched, intervalWeekly, timeoutFinishSched;

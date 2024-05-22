@@ -1,6 +1,8 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../../constants.js";
-import { getDateFromSunday, getWeekBounds } from "../../helpers/week.js";
+import { db } from "../../config/db.config.js";
+import {
+    getDateFromSunday,
+    getWeekBounds
+} from "../../helpers/utils.helper.js";
 
 export function add(req, res) {
     const { week } = req.body;
@@ -180,5 +182,3 @@ export function remove(req, res) {
         });
     }
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

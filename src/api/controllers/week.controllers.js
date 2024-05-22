@@ -1,7 +1,6 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../../constants.js";
-import { getWeekBounds, getWeekMatrix } from "../../helpers/week.js";
-import { schedule as sch } from "../../helpers/schedule.js";
+import { db } from "../../config/db.config.js";
+import { getWeekBounds, getWeekMatrix } from "../../helpers/utils.helper.js";
+import { schedule as sch } from "../../services/schedule.service.js";
 
 export function get(req, res) {
     const { week } = req.params;
@@ -148,5 +147,3 @@ export function schedule(req, res) {
         });
     });
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

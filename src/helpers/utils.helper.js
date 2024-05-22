@@ -1,4 +1,4 @@
-import { LOCAL_TIMEZONE } from "../config.js";
+import { LOCAL_TIMEZONE } from "../config/general.config.js";
 
 export function getWeekBounds(date = new Date()) {
     const day = date.getDay();
@@ -32,4 +32,8 @@ export function getDateFromSunday(sunday, dayOfWeek, hour) {
     date.setHours(hour);
 
     return date;
+}
+
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

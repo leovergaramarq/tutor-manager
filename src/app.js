@@ -5,11 +5,11 @@ import path from "path";
 
 import apiRouter from "./api/routes/index.routes.js";
 import pageRouter from "./page/routes/index.routes.js";
-import setSchedule from "./helpers/schedule.js";
-import preferences from "./helpers/preferences.js";
-import initDB from "./helpers/initDB.js";
+import { setSchedule } from "./services/schedule.service.js";
+import { initPreferences } from "./config/preferences.config.js";
+import { initDB } from "./config/db.config.js";
 
-import { __dirname } from "./constants.js";
+import { __dirname } from "./config/constants.config.js";
 
 export default function () {
     // app setup
@@ -41,22 +41,27 @@ export default function () {
     // error handler
     // app.use((_, res) => res.status(404).render('404'));
 
-    initDB((err) => {
-        console.log("Initializing database...");
-        if (err) {
+    async function initTasks() {
+        try {
+            await initDB();
+        } catch (err) {
             console.log("ERROR: Database not initialized.");
-            return console.error(err);
+            console.error(err);
+            return;
         }
-        console.log("Initializing preferences...");
-        preferences((err) => {
-            if (err) {
-                console.log("ERROR: Couldn't read preferences.");
-                return console.error(err);
-            }
-            console.log("Programming schedule...");
-            setSchedule();
-        });
-    });
+
+        try {
+            await initPreferences();
+        } catch (err) {
+            console.log("ERROR: Couldn't read preferences.");
+            console.error(err);
+            return;
+        }
+
+        setSchedule();
+    }
+
+    initTasks().catch(console.error);
 
     return app;
 }

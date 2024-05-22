@@ -1,5 +1,4 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../constants.js";
+import { db } from "../config/db.config.js";
 
 export function loggedIn(req, res, next) {
     db.serialize(() => {
@@ -35,5 +34,3 @@ export function loggedOut(req, res, next) {
         });
     });
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

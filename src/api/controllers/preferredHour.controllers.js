@@ -1,6 +1,5 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../../constants.js";
-import { getWeekMatrix } from "../../helpers/week.js";
+import { db } from "../../config/db.config.js";
+import { getWeekMatrix } from "../../helpers/utils.helper.js";
 
 export function get(_, res) {
     db.serialize(() => {
@@ -187,5 +186,3 @@ export function clearAll(_, res) {
         });
     });
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

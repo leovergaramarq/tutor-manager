@@ -1,5 +1,4 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../constants.js";
+import { db } from "../config/db.config.js";
 
 export function save(cookies) {
     return new Promise((resolve, reject) => {
@@ -26,22 +25,3 @@ export function save(cookies) {
         });
     });
 }
-
-// export function load() {
-//     return new Promise((resolve, reject) => {
-//         db.serialize(() => {
-//             db.all('SELECT * FROM User', (err, rows) => {
-//                 if (err) {
-//                     console.error(err);
-//                     return reject(err);
-//                 }
-//                 if (!rows.length) {
-//                     return reject('No user found');
-//                 }
-//                 resolve(rows[0]['Cookies'] ? JSON.parse(rows[0]['Cookies']) : null);
-//             });
-//         });
-//     });
-// }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

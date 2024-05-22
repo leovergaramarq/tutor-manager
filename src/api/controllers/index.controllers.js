@@ -1,10 +1,10 @@
 import puppeteer from "puppeteer";
-import sqlite3 from "sqlite3";
-import sleep from "../../helpers/sleep.js";
-import { DB_PATH, URL_BILLING, URL_USD } from "../../constants.js";
-import { save as saveCookies } from "../../helpers/cookies.js";
-import { decodeBase64, encodeBase64 } from "../../helpers/auth.js";
-import { PUPPETEER_EXEC_PATH } from "../../config.js";
+import { db } from "../../config/db.config.js";
+import { sleep } from "../../helpers/utils.helper.js";
+import { URL_BILLING, URL_USD } from "../../config/constants.config.js";
+import { save as saveCookies } from "../../services/cookies.service.js";
+import { decodeBase64, encodeBase64 } from "../../services/auth.service.js";
+import { PUPPETEER_EXEC_PATH } from "../../config/general.config.js";
 
 export function hello(_, res) {
     db.serialize(() => {
@@ -297,5 +297,3 @@ export async function validateCredentials(req, res) {
         });
     });
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);

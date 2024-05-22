@@ -8,7 +8,7 @@ import {
     promptPort,
     promptPuppeteerExecPath,
     PUPPETEER_EXEC_PATH
-} from "./config.js";
+} from "./config/general.config.js";
 
 const PORT_KEY = "port";
 

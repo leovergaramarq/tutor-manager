@@ -2,7 +2,7 @@ import prompts from "prompts";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { __dirname } from "./constants.js";
+import { __dirname } from "./constants.config.js";
 
 export let PORT;
 export let PUPPETEER_EXEC_PATH;
@@ -16,17 +16,15 @@ export const SCHEDULE_ANTICIPATION = 60000; // begin scrapping 1 minute before t
 export const SCHEDULE_DELAY = 0; // schedule 1 second after the hour (to avoid scheduling conflicts)
 export const SCHEDULE_METHOD = 0; // 0 = adding, 1 = area
 export const SCHEDULE_PREFERRED_HOURS = 0; // 0 = no (use table Hour), 1 = yes (use table PreferredHour)
-export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing
-
-config();
 
 export function config(newConfig) {
     if (newConfig && Object.keys(newConfig).length) {
         const { port, puppeteerExecPath } = newConfig;
-        const pathFile = path.join(__dirname, ".env");
+        const pathEnv = path.join(__dirname, ".env");
         const dataList = [];
 
         if (port !== undefined) dataList.push(`PORT="${port}"`);
@@ -36,7 +34,7 @@ export function config(newConfig) {
         const data = dataList.join("\n");
 
         try {
-            fs.writeFileSync(pathFile, data);
+            fs.writeFileSync(pathEnv, data);
         } catch (err) {
             console.error(err);
         }
@@ -67,3 +65,5 @@ export async function promptPuppeteerExecPath() {
     });
     return puppeteerExecPath.trim();
 }
+
+config();

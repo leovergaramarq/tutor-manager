@@ -1,9 +1,6 @@
-import sqlite3 from "sqlite3";
-import { DB_PATH } from "../../constants.js";
+import { db } from "../../config/db.config.js";
 
-const db = new (sqlite3.verbose().Database)(DB_PATH);
-
-export function get(req, res) {
+export function get(_, res) {
     db.serialize(() => {
         db.all(`SELECT * FROM User`, (err, users) => {
             if (err) {

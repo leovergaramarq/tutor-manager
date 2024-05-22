@@ -1,6 +1,5 @@
-import sqlite3 from "sqlite3";
-import setSchedule from "../../helpers/schedule.js";
-import { DB_PATH } from "../../constants.js";
+import { setSchedule } from "../../services/schedule.service.js";
+import { db } from "../../config/db.config.js";
 import {
     DAY_TO_SCHEDULE,
     HOUR_TO_SCHEDULE,
@@ -10,7 +9,7 @@ import {
     SCHEDULE_PREFERRED_HOURS,
     DEADLINE_MINUTES_TO_SCHEDULE,
     PUPPETEER_HEADLESS
-} from "../../config.js";
+} from "../../config/general.config.js";
 
 export function get(req, res) {
     db.serialize(() => {
@@ -277,5 +276,3 @@ export function reset(req, res) {
         });
     });
 }
-
-const db = new (sqlite3.verbose().Database)(DB_PATH);
