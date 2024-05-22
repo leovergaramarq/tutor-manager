@@ -1,6 +1,7 @@
 import fs from "fs";
 import net from "net";
 import puppeteer from "puppeteer";
+import axios from "axios";
 import createApp from "./app.js";
 import {
     config,
@@ -163,14 +164,14 @@ async function getPuppeteerExecPath() {
 
 async function syncLocalTime() {
     try {
-        const response = await fetch(URL_WORLD_TIME_API);
-        if (!response.ok) {
+        const response = await axios.get(URL_WORLD_TIME_API);
+        if (response.status !== 200) {
             throw new Error("Failed to get world time API");
         }
 
         // console.log(`Date before: ${newDate().toISOString()}`);
 
-        const { datetime } = await response.json();
+        const { datetime } = response.data;
 
         // console.log(
         //     `Date from world time API: ${newDate(datetime).toISOString()}`

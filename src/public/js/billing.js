@@ -67,7 +67,7 @@ async function fetchData() {
     $scheduledHours.value = scheduledHours;
     $onlineHours.value = onlineHours;
 
-    if (usd !== undefined) recalculatePayment();
+    recalculatePayment();
     recalculateTime();
 }
 
@@ -85,7 +85,7 @@ async function fetchUSD() {
     // usd = 4700;
 
     $usd.value = usd;
-    if (data !== undefined) recalculatePayment();
+    recalculatePayment();
 }
 
 function recalculatePayment() {
@@ -141,8 +141,8 @@ function loadData() {
         belowNavbar: true
     });
     Promise.all([fetchData(), fetchUSD()])
-        .then(hideLoading)
-        .catch(console.error);
+        .catch(console.error)
+        .finally(hideLoading);
 }
 
 let $minutesWaiting;
