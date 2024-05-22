@@ -4,11 +4,14 @@ import puppeteer from "puppeteer";
 import createApp from "./app.js";
 import {
     config,
-    PORT,
     promptPort,
     promptPuppeteerExecPath,
-    PUPPETEER_EXEC_PATH
+    PORT,
+    PUPPETEER_EXEC_PATH,
+    configTimeDiff
 } from "./config/general.config.js";
+import { URL_WORLD_TIME_API } from "./config/constants.config.js";
+import { newDate } from "./helpers/utils.helper.js";
 
 const PORT_KEY = "port";
 
@@ -38,6 +41,8 @@ function run() {
             const port = await getPort();
             console.log();
             const puppeteerExecPath = await getPuppeteerExecPath();
+            console.log();
+            await syncLocalTime();
 
             config({ port, puppeteerExecPath });
 
@@ -54,7 +59,6 @@ function run() {
 }
 
 function startServer(app) {
-    if (!app) return;
     app.listen(app.get(PORT_KEY), onListening);
     app.on("error", onError);
 
@@ -155,4 +159,28 @@ async function getPuppeteerExecPath() {
     }
 
     return puppeteerExecPath;
+}
+
+async function syncLocalTime() {
+    try {
+        const response = await fetch(URL_WORLD_TIME_API);
+        if (!response.ok) {
+            throw new Error("Failed to get world time API");
+        }
+
+        // console.log(`Date before: ${newDate().toISOString()}`);
+
+        const { datetime } = await response.json();
+
+        // console.log(
+        //     `Date from world time API: ${newDate(datetime).toISOString()}`
+        // );
+
+        const timeDiff = newDate(datetime).getTime() - newDate().getTime();
+        configTimeDiff(timeDiff);
+
+        // console.log(`Date after: ${newDate().toISOString()}`);
+    } catch (err) {
+        console.error(err);
+    }
 }

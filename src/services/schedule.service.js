@@ -3,7 +3,7 @@ import { db } from "../config/db.config.js";
 import { URL_SCHEDULE } from "../config/constants.config.js";
 import { defPreferences } from "../config/preferences.config.js";
 import { save as saveCookies } from "./cookies.service.js";
-import { sleep } from "../helpers/utils.helper.js";
+import { newDate, sleep } from "../helpers/utils.helper.js";
 import {
     getDateFromSunday,
     getLocalTime,
@@ -69,7 +69,7 @@ export function setSchedule() {
                 }, 604800000);
 
                 console.log(
-                    `Unwanted delay: ${(new Date() - localDate) / 1000}s`
+                    `Unwanted delay: ${(newDate() - localDate) / 1000}s`
                 );
                 schedule(1, localDateSched, {
                     scheduleDelay,
@@ -104,11 +104,6 @@ export async function schedule(
     preferences,
     callback
 ) {
-    console.log(
-        getLocalTime().toLocaleTimeString(),
-        "-",
-        "Start schedule method"
-    );
     if (week < 0 || week > 1) {
         const msg = "Invalid week.";
         console.log(msg);
@@ -136,11 +131,7 @@ export async function schedule(
                 if (callback) callback(401, msg);
                 return;
             }
-            console.log(
-                getLocalTime().toLocaleTimeString(),
-                "-",
-                "Database User query successful."
-            );
+
             const { scheduleDelay, scheduleMethod, schedulePreferredHours } =
                 preferences;
 
@@ -155,14 +146,10 @@ export async function schedule(
                             .status(500)
                             .json({ message: "Internal server error" });
                     }
-                    console.log(
-                        getLocalTime().toLocaleTimeString(),
-                        "-",
-                        "Database Hour query successful."
-                    );
+
                     let localDate = getLocalTime();
                     const [sunday, saturday] = getWeekBounds(
-                        new Date(localDate.getTime() + week * 604800000)
+                        newDate(localDate.getTime() + week * 604800000)
                     ); // 604800000 = 7 days in case week is 1
 
                     // filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
@@ -190,11 +177,7 @@ export async function schedule(
                             return Hour > localDate.getHours();
                         });
                     }
-                    console.log(
-                        getLocalTime().toLocaleTimeString(),
-                        "-",
-                        "Hours filtered."
-                    );
+
                     if (!hours.length) {
                         const msg = "No hours found.";
                         console.log(msg);
@@ -207,15 +190,10 @@ export async function schedule(
                     const hoursDate = hours.map(({ Year, Month, Day, Hour }) =>
                         hourToDate(Year, Month, Day, Hour, sunday)
                     );
-
                     const cells = hours.map(({ Year, Month, Day, Hour }) =>
                         hourToCell(Year, Month, Day, Hour)
                     );
-                    console.log(
-                        getLocalTime().toLocaleTimeString(),
-                        "-",
-                        "Cells calculated."
-                    );
+
                     try {
                         // start puppeteer
                         const browser = await puppeteer.launch({
@@ -232,31 +210,19 @@ export async function schedule(
                                 ? true
                                 : false
                         });
-                        console.log(
-                            getLocalTime().toLocaleTimeString(),
-                            "-",
-                            "Puppeteer launched."
-                        );
                         const page = await browser.newPage();
+
                         if (users[0]["Cookies"]) {
                             await page.setCookie(
                                 ...JSON.parse(users[0]["Cookies"])
                             );
                         }
-                        console.log(
-                            getLocalTime().toLocaleTimeString(),
-                            "-",
-                            "Page created."
-                        );
+
                         await page.goto(URL_SCHEDULE, {
                             timeout: 5000,
                             waitUntil: ["domcontentloaded", "networkidle0"]
                         });
-                        console.log(
-                            getLocalTime().toLocaleTimeString(),
-                            "-",
-                            "Page loaded."
-                        );
+
                         let newLogin;
 
                         // if need to login again
@@ -316,7 +282,6 @@ export async function schedule(
                             );
 
                             clearTimeout(timeoutFinishSched);
-                            const wtfTimeout = 2000;
 
                             // wait for the hour to schedule
                             timeoutFinishSched = setTimeout(async () => {
@@ -350,7 +315,7 @@ export async function schedule(
                                     newLogin,
                                     callback
                                 );
-                            }, localDateSched - localDate + scheduleDelay - wtfTimeout);
+                            }, localDateSched - localDate + scheduleDelay);
                         } else {
                             // schedule immediately
                             await finishSchedule(
@@ -505,7 +470,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         // schedule the whole week simulating drag and drop
         const { mouse } = page;
 
-        const date = new Date();
+        const date = newDate();
         const dayNow = date.getDay() % 7;
         const hoursNow = date.getHours();
 
@@ -691,9 +656,9 @@ function getDateToSchedule(
     const day = date.getDate() + ((dayToSchedule - date.getDay() + 7) % 7);
     const hour = hourToSchedule;
 
-    const dateSched = new Date(date);
+    const dateSched = newDate(date);
     dateSched.setDate(day);
-    dateSched.setHours(hour, 48, 0, 0);
+    dateSched.setHours(hour, 0, 0, 0);
 
     if ((date - dateSched) / 60000 > deadlineMinutesToSchedule) {
         // if the hour to schedule is in the past, schedule for next week
@@ -710,8 +675,8 @@ function getCellsForAreaSchedule(hours) {
     const dates = hours.map(({ Year, Month, Day, Hour }) =>
         hourToDate(Year, Month, Day, Hour)
     );
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
+    const minDate = newDate(Math.min(...dates));
+    const maxDate = newDate(Math.max(...dates));
 
     const cellFrom = hourToCell(
         minDate.getFullYear(),
@@ -741,7 +706,7 @@ function hourToCell(Year, Month, Day, Hour) {
 
 function hourToDate(Year, Month, Day, Hour, sunday) {
     return Year !== undefined
-        ? new Date(`${Year}/${Month}/${Day} ${Hour}:00`)
+        ? newDate(`${Year}/${Month}/${Day} ${Hour}:00`)
         : getDateFromSunday(sunday, Day, Hour);
 }
 

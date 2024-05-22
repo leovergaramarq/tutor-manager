@@ -1,3 +1,5 @@
+// TODO: encrypt and decrypt functions
+
 export function encodeBase64(string) {
     return Buffer.from(string).toString("base64");
 }

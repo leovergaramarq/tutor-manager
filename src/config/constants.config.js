@@ -1,4 +1,5 @@
 import path from "path";
+import { LOCAL_TIMEZONE } from "./general.config.js";
 
 export const __dirname = process.cwd();
 
@@ -14,7 +15,8 @@ export const URL_BILLING =
 // export const URL_RATING =
 //     "https://prv.tutor.com/nGEN/Apps/SocWinSupportingPages/Provider/ConnectionInfo.aspx?ProgramGUID=b611858b-4d02-4afe-8053-d082bbc1c58e";
 export const URL_USD = "https://www.google.com/finance/quote/USD-COP";
-export const URL_TIME_IS = "https://time.is";
+// export const URL_TIME_IS = "https://time.is";
+export const URL_WORLD_TIME_API = `https://worldtimeapi.org/api/timezone/${LOCAL_TIMEZONE}`;
 
 export const SCHEDULE_BY_ADDING = 0;
 export const SCHEDULE_BY_AREA = 1;

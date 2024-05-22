@@ -202,7 +202,7 @@ export async function usd(_, res) {
         const page = await browser.newPage();
         await page.goto(URL_USD, {
             timeout: 5000,
-            waitUntil: ["domcontentloaded"]
+            waitUntil: ["domcontentloaded", "networkidle0"]
         });
         // await page.waitForNavigation();
         // await sleep(500);
