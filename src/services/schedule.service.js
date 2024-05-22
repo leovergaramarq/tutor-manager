@@ -220,7 +220,7 @@ export async function schedule(
 
                         await page.goto(URL_SCHEDULE, {
                             timeout: 5000,
-                            waitUntil: ["domcontentloaded", "networkidle0"]
+                            waitUntil: ["domcontentloaded", "networkidle0"] // TODO: check if this is necessary
                         });
 
                         let newLogin;
@@ -438,11 +438,7 @@ async function scheduleByAdding(page, hours, cells) {
         }
 
         console.log("looking for scheduled hours...");
-        const scheduled = await page.evaluate(() =>
-            [...document.querySelectorAll(".ui-selecting-finished-FILLED")].map(
-                (el) => el.id
-            )
-        );
+        const scheduled = await getScheduledHours(page);
         console.log("scheduled", scheduled);
         scheduled.forEach(
             (id) => cells.includes(+id.split("cell")[1]) && count++
@@ -460,11 +456,6 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
     let { cellFrom, cellTo } = getCellsForAreaSchedule(hours);
 
     // await page.waitForSelector("#cell0");
-
-    const getScheduledHours = () =>
-        [...document.querySelectorAll(".ui-selecting-finished-FILLED")].map(
-            (el) => el.id
-        );
 
     try {
         // schedule the whole week simulating drag and drop
@@ -486,7 +477,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         }
 
         // find hours already scheduled
-        const previouslyScheduled = await page.evaluate(getScheduledHours);
+        const previouslyScheduled = await getScheduledHours(page);
         console.log("previouslyScheduled", previouslyScheduled);
 
         const scheduleArea = async (cellFrom, cellTo) => {
@@ -544,7 +535,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         }
 
         // unschedule the unwanted hours
-        const scheduled = await page.evaluate(getScheduledHours); // get the hours scheduled after step 1
+        const scheduled = await getScheduledHours(page); // get the hours scheduled after step 1
         console.log("scheduled so far", scheduled);
 
         const toUnschedule = scheduled.filter((id) => {
@@ -637,13 +628,21 @@ async function waitForScheduleButton(page, timeout = 30000) {
     }
 }
 
-function getHoursAvailable(page) {
+async function getHoursAvailable(page) {
     return (
-        page.evaluate(
+        (await page.evaluate(
             () =>
                 +document.querySelector("#lblAvailableHours")?.textContent -
                 +document.querySelector("#lblScheduledHours")?.textContent
-        ) || 0
+        )) || 0
+    );
+}
+
+async function getScheduledHours(page) {
+    return await page.evaluate(() =>
+        Array.from(
+            document.querySelectorAll(".ui-selecting-finished-FILLED")
+        ).map((el) => el.id)
     );
 }
 
