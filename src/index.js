@@ -13,6 +13,7 @@ import {
 } from "./config/general.config.js";
 import { URL_WORLD_TIME_API } from "./config/constants.config.js";
 import { newDate } from "./helpers/utils.helper.js";
+import { exec } from "child_process";
 
 const PORT_KEY = "port";
 
@@ -64,7 +65,18 @@ function startServer(app) {
     app.on("error", onError);
 
     function onListening() {
-        console.log(`Server listening on port ${app.get(PORT_KEY)}`);
+        const port = app.get(PORT_KEY);
+        console.log(`Server listening on port ${port}`);
+
+        exec(`start http://localhost:${port}`, (err) => {
+            if (err) {
+                console.error(err);
+                console.log(`Open http://localhost:${port} in your browser`);
+                return;
+            }
+
+            console.log("App is running in your browser 🚀");
+        });
     }
 
     function onError(err) {
