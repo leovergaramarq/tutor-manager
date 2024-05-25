@@ -1,8 +1,7 @@
 import { db } from "../../config/db.config.js";
 import {
     getDateFromSunday,
-    getWeekBounds,
-    newDate
+    getWeekBounds
 } from "../../helpers/utils.helper.js";
 
 export function add(req, res) {
@@ -22,7 +21,7 @@ export function add(req, res) {
 
         if (hour > 23) return res.status(400).json({ message: "Invalid hour" });
 
-        if (newDate(`${year}-${month}-${day} ${hour}:`) === "Invalid Date") {
+        if (new Date(`${year}-${month}-${day} ${hour}:`) === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
         }
 
@@ -75,13 +74,13 @@ export function add(req, res) {
 
         db.serialize(() => {
             const [sunday] = getWeekBounds(
-                newDate(newDate().getTime() + week * 604800000)
+                new Date(new Date().getTime() + week * 604800000)
             );
             let count = 0;
 
             hours.forEach((day, i) => {
                 day.forEach((hour, j) => {
-                    // const date = newDate(sunday.getTime() + i * 86400000 + j * 3600000);
+                    // const date = new Date(sunday.getTime() + i * 86400000 + j * 3600000);
                     const date = getDateFromSunday(sunday, i, j);
 
                     const year = date.getFullYear();
@@ -162,7 +161,7 @@ export function remove(req, res) {
             !month ||
             !day ||
             !hour ||
-            newDate(`${year}-${month}-${day} ${hour}:`) === "Invalid Date"
+            new Date(`${year}-${month}-${day} ${hour}:`) === "Invalid Date"
         ) {
             return res.status(400).json({ message: "Invalid date" });
         }

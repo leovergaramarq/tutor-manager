@@ -1,9 +1,5 @@
 import { db } from "../../config/db.config.js";
-import {
-    getWeekBounds,
-    getWeekMatrix,
-    newDate
-} from "../../helpers/utils.helper.js";
+import { getWeekBounds, getWeekMatrix } from "../../helpers/utils.helper.js";
 import { schedule as sch } from "../../services/schedule.service.js";
 
 export function get(req, res) {
@@ -12,19 +8,19 @@ export function get(req, res) {
     let date;
 
     if (week === undefined) {
-        date = newDate();
+        date = new Date();
     } else if (!isNaN(week)) {
         if (week < 0) {
             return res.status(400).json({ message: "Invalid week" });
         }
-        date = newDate();
+        date = new Date();
         date.setDate(date.getDate() + week * 7);
     } else {
-        date = newDate(date.replace(/-/g, "/"));
+        date = new Date(date.replace(/-/g, "/"));
         if (date === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
         } else {
-            date = newDate(date);
+            date = new Date(date);
         }
     }
 
@@ -84,13 +80,13 @@ export function clearWeek(req, res) {
     let { date } = req.params;
 
     if (!date) {
-        date = newDate();
+        date = new Date();
     } else {
-        date = newDate(date.replace(/-/g, "/"));
+        date = new Date(date.replace(/-/g, "/"));
         if (date === "Invalid Date") {
             return res.status(400).json({ message: "Invalid date" });
         } else {
-            date = newDate(date);
+            date = new Date(date);
         }
     }
 

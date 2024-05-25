@@ -4,10 +4,6 @@ import fs from "fs";
 import path from "path";
 import { __dirname } from "./constants.config.js";
 
-export let PORT;
-export let PUPPETEER_EXEC_PATH;
-export let TIME_DIFF = 0;
-
 // preferences
 export const DEADLINE_MINUTES_TO_SCHEDULE = 60; // schedule if 60 mimnutes have not passed since the hour
 export const PUPPETEER_HEADLESS = 0; // 0 = no, 1 = yes
@@ -18,6 +14,10 @@ export const SCHEDULE_DELAY = 500; // schedule 1 second after the hour (to avoid
 export const SCHEDULE_METHOD = 0; // 0 = adding, 1 = area
 export const SCHEDULE_PREFERRED_HOURS = 0; // 0 = no (use table Hour), 1 = yes (use table PreferredHour)
 
+export let PORT;
+export let PUPPETEER_EXEC_PATH;
+export let TIME_DIFF = 0;
+export const NODE_ENV = process.env.NODE_ENV || "production";
 export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing

@@ -5,8 +5,8 @@
   "private": true,
   "main": "./src/index.js",
   "scripts": {
-    "start": "node ./src/index.js",
-    "dev": "nodemon ./src/index.js",
+    "start": "cross-env NODE_ENV=production node ./src/index.js",
+    "dev": "cross-env NODE_ENV=development nodemon NODE_ENV=development ./src/index.js",
     "build": "cross-env BUILD_ACTION=clean_build node ./build-helper.js && babel ./src/ -d ./build/src/ && cpy ./src/page/views/ ./build/ && cpy ./src/public/ ./build/ && cpy ./src/assets/ ./build/ && cpy ./node_modules/ ./build/ && cross-env BUILD_ACTION=package_json node ./build-helper.js",
     "dist:exe": "pkg --public . && cross-env BUILD_ACTION=clean_dist node ./build-helper.js && cd ./build/ && cpy ./src/assets/ ../dist/ && cpy ./src/page/views/ ../dist/ && cpy ./src/public/ ../dist/ && move-file ./tutor-manager.exe ../dist/tutor-manager.exe && cd ../",
     "dist": "npm run build && npm run dist:exe"

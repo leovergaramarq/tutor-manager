@@ -3,7 +3,7 @@ import { db } from "../config/db.config.js";
 import { URL_SCHEDULE } from "../config/constants.config.js";
 import { defPreferences } from "../config/preferences.config.js";
 import { save as saveCookies } from "./cookies.service.js";
-import { newDate, sleep } from "../helpers/utils.helper.js";
+import { getDateSync, sleep } from "../helpers/utils.helper.js";
 import {
     getDateFromSunday,
     getLocalTime,
@@ -69,7 +69,7 @@ export function setSchedule() {
                 }, 604800000);
 
                 console.log(
-                    `Unwanted delay: ${(newDate() - localDate) / 1000}s`
+                    `Unwanted delay: ${(getLocalTime() - localDate) / 1000}s`
                 );
                 schedule(1, localDateSched, {
                     scheduleDelay,
@@ -149,7 +149,7 @@ export async function schedule(
 
                     let localDate = getLocalTime();
                     const [sunday, saturday] = getWeekBounds(
-                        newDate(localDate.getTime() + week * 604800000)
+                        new Date(localDate.getTime() + week * 604800000)
                     ); // 604800000 = 7 days in case week is 1
 
                     // filter hours by week and greater than now if schedulePreferredHours is false (using table Hour)
@@ -461,7 +461,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
         // schedule the whole week simulating drag and drop
         const { mouse } = page;
 
-        const date = newDate();
+        const date = getDateSync();
         const dayNow = date.getDay() % 7;
         const hoursNow = date.getHours();
 
@@ -655,7 +655,7 @@ function getDateToSchedule(
     const day = date.getDate() + ((dayToSchedule - date.getDay() + 7) % 7);
     const hour = hourToSchedule;
 
-    const dateSched = newDate(date);
+    const dateSched = getDateSync(date);
     dateSched.setDate(day);
     dateSched.setHours(hour, 0, 0, 0);
 
@@ -674,8 +674,8 @@ function getCellsForAreaSchedule(hours) {
     const dates = hours.map(({ Year, Month, Day, Hour }) =>
         hourToDate(Year, Month, Day, Hour)
     );
-    const minDate = newDate(Math.min(...dates));
-    const maxDate = newDate(Math.max(...dates));
+    const minDate = getDateSync(Math.min(...dates));
+    const maxDate = getDateSync(Math.max(...dates));
 
     const cellFrom = hourToCell(
         minDate.getFullYear(),
@@ -705,7 +705,7 @@ function hourToCell(Year, Month, Day, Hour) {
 
 function hourToDate(Year, Month, Day, Hour, sunday) {
     return Year !== undefined
-        ? newDate(`${Year}/${Month}/${Day} ${Hour}:00`)
+        ? getDateSync(`${Year}/${Month}/${Day} ${Hour}:00`)
         : getDateFromSunday(sunday, Day, Hour);
 }
 

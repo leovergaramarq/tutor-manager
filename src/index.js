@@ -9,10 +9,11 @@ import {
     promptPuppeteerExecPath,
     PORT,
     PUPPETEER_EXEC_PATH,
-    configTimeDiff
+    configTimeDiff,
+    NODE_ENV
 } from "./config/general.config.js";
 import { URL_WORLD_TIME_API } from "./config/constants.config.js";
-import { newDate } from "./helpers/utils.helper.js";
+import { getDateSync } from "./helpers/utils.helper.js";
 import { exec } from "child_process";
 
 const PORT_KEY = "port";
@@ -68,15 +69,21 @@ function startServer(app) {
         const port = app.get(PORT_KEY);
         console.log(`Server listening on port ${port}`);
 
-        exec(`start http://localhost:${port}`, (err) => {
-            if (err) {
-                console.error(err);
-                console.log(`Open http://localhost:${port} in your browser`);
-                return;
-            }
+        if (NODE_ENV === "production") {
+            exec(`start http://localhost:${port}`, (err) => {
+                if (err) {
+                    console.error(err);
+                }
 
-            console.log("App is running in your browser 🚀");
-        });
+                console.log(
+                    `App is running in your browser in http://localhost:${port} 🚀`
+                );
+            });
+        } else {
+            console.log(
+                `App is running in your browser in http://localhost:${port} 🚀`
+            );
+        }
     }
 
     function onError(err) {
@@ -181,18 +188,10 @@ async function syncLocalTime() {
             throw new Error("Failed to get world time API");
         }
 
-        // console.log(`Date before: ${newDate().toISOString()}`);
-
         const { datetime } = response.data;
-
-        // console.log(
-        //     `Date from world time API: ${newDate(datetime).toISOString()}`
-        // );
-
-        const timeDiff = newDate(datetime).getTime() - newDate().getTime();
+        const timeDiff =
+            getDateSync(datetime).getTime() - getDateSync().getTime();
         configTimeDiff(timeDiff);
-
-        // console.log(`Date after: ${newDate().toISOString()}`);
     } catch (err) {
         console.error(err);
     }

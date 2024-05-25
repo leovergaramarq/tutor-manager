@@ -1,6 +1,6 @@
 import { LOCAL_TIMEZONE, TIME_DIFF } from "../config/general.config.js";
 
-export function newDate(...args) {
+export function getDateSync(...args) {
     const date = new Date(...args);
     date.setTime(date.getTime() + TIME_DIFF);
     return date;
@@ -9,11 +9,11 @@ export function newDate(...args) {
 export function getWeekBounds(date = new Date()) {
     const day = date.getDay();
 
-    const sunday = newDate(date);
+    const sunday = new Date(date);
     sunday.setDate(date.getDate() - day);
     sunday.setHours(0, 0, 0, 0);
 
-    const saturday = newDate(date);
+    const saturday = new Date(date);
     saturday.setDate(date.getDate() + (6 - day));
     saturday.setHours(23, 59, 59, 999);
 
@@ -25,7 +25,7 @@ export function getWeekMatrix() {
 }
 
 export function getLocalTime(date = new Date()) {
-    return newDate(
+    return getDateSync(
         date.toLocaleString("en-US", {
             timeZone: LOCAL_TIMEZONE
         })
@@ -33,8 +33,14 @@ export function getLocalTime(date = new Date()) {
 }
 
 export function getDateFromSunday(sunday, dayOfWeek, hour) {
-    const date = newDate(sunday);
+    const date = new Date(sunday);
+    if (dayOfWeek === 6) {
+        console.log(date.getDate());
+    }
     date.setDate(date.getDate() + dayOfWeek);
+    if (dayOfWeek === 6) {
+        console.log(date.getDate());
+    }
     date.setHours(hour);
 
     return date;
