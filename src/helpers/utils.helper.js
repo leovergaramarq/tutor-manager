@@ -34,13 +34,6 @@ export function getLocalTime(date = new Date()) {
 
 export function getDateFromSunday(sunday, dayOfWeek, hour) {
     const date = new Date(sunday);
-    if (dayOfWeek === 6) {
-        console.log(date.getDate());
-    }
-    date.setDate(date.getDate() + dayOfWeek);
-    if (dayOfWeek === 6) {
-        console.log(date.getDate());
-    }
     date.setHours(hour);
 
     return date;

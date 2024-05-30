@@ -91,7 +91,6 @@ export function clearWeek(req, res) {
     }
 
     const [sunday, saturday] = getWeekBounds(date);
-    console.log(sunday, saturday);
 
     db.serialize(() => {
         db.run(

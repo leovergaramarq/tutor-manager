@@ -16,6 +16,13 @@ export function initDB() {
             .toString()
             .split(";");
 
+        const pathDbDir = path.join(__dirname, "db");
+        if (!fs.existsSync(pathDbDir)) {
+            fs.mkdirSync(pathDbDir);
+        }
+
+        db = new (sqlite3.verbose().Database)(DB_PATH);
+
         db.serialize(() => {
             statements.forEach((statement) => {
                 db.run(statement, (err) => {
@@ -30,9 +37,4 @@ export function initDB() {
     });
 }
 
-const pathDbDir = path.join(__dirname, "db");
-if (!fs.existsSync(pathDbDir)) {
-    fs.mkdirSync(pathDbDir);
-}
-
-export const db = new (sqlite3.verbose().Database)(DB_PATH);
+export let db;

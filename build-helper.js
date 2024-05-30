@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const __dirname = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const action = process.env.BUILD_ACTION;
 
 if (action === "clean_build") {

@@ -2,7 +2,7 @@ export default function (api) {
     api.cache(true);
 
     const ignore = ["./src/public/**/*"];
-    
+
     const parserOpts = { allowReturnOutsideFunction: true };
 
     const presets = [

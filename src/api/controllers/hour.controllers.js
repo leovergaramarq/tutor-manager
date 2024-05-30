@@ -60,7 +60,7 @@ export function add(req, res) {
     } else {
         // schedule week
         const { hours } = req.body;
-        // console.log(hours);
+
         if (!hours) return res.status(400).json({ message: "Missing hours" });
         if (isNaN(week) || week < 0)
             return res.status(400).json({ message: "Invalid week" });

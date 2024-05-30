@@ -1,7 +1,9 @@
 import path from "path";
 import { LOCAL_TIMEZONE } from "./general.config.js";
 
-export const __dirname = process.cwd();
+export const __dirname = process.execPath.endsWith("tutor-manager.exe")
+    ? path.join(process.execPath, "..")
+    : process.cwd();
 
 export const DB_PATH = path.join(__dirname, "db", "db.sqlite3");
 
