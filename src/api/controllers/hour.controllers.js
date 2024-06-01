@@ -94,24 +94,35 @@ export function add(req, res) {
                             (err, rows) => {
                                 if (err) {
                                     console.error(err);
+                                    return res.status(500).json({
+                                        message: "Internal server error"
+                                    });
                                 }
+
                                 if (rows?.length) {
                                     // hour already exists
                                     count++;
-                                    if (count === 168)
+                                    if (count === 168) {
                                         res.status(201).json({ message: "OK" });
+                                    }
                                 } else {
                                     db.run(
                                         `INSERT INTO Hour (Year, Month, Day, Hour) VALUES (${year}, ${month}, ${day}, ${hours})`,
                                         (err) => {
                                             if (err) {
                                                 console.error(err);
+                                                return res.status(500).json({
+                                                    message:
+                                                        "Internal server error"
+                                                });
                                             }
+
                                             count++;
-                                            if (count === 168)
+                                            if (count === 168) {
                                                 res.status(201).json({
                                                     message: "OK"
                                                 });
+                                            }
                                         }
                                     );
                                 }
@@ -123,10 +134,15 @@ export function add(req, res) {
                             (err) => {
                                 if (err) {
                                     console.error(err);
+                                    return res.status(500).json({
+                                        message: "Internal server error"
+                                    });
                                 }
+
                                 count++;
-                                if (count === 168)
+                                if (count === 168) {
                                     res.status(201).json({ message: "OK" });
+                                }
                             }
                         );
                     }
