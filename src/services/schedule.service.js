@@ -378,6 +378,7 @@ async function finishSchedule(
                 window.alert = () => {};
             });
 
+            // TODO: develop schedule method programmatically (call event handlers directly)
             const count =
                 scheduleMethod === SCHEDULE_BY_ADDING
                     ? await scheduleByAdding(page, hours, cells)

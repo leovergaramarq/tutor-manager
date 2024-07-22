@@ -20,6 +20,7 @@ export function hello(_, res) {
     });
 }
 
+// TODO: encrypt password
 export function login(req, res) {
     const { username, password } = req.body;
 
