@@ -7,7 +7,8 @@ import {
     SCHEDULE_METHOD,
     SCHEDULE_PREFERRED_HOURS,
     DEADLINE_MINUTES_TO_SCHEDULE,
-    PUPPETEER_HEADLESS
+    PUPPETEER_HEADLESS,
+    LOW_SEASON
 } from "./general.config.js";
 
 export function initPreferences() {
@@ -24,7 +25,7 @@ export function initPreferences() {
                     );
 
                     db.run(
-                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, SchedulePreferredHours, ScheduleMethod, ScheduleDelay, ScheduleAnticipation, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_PREFERRED_HOURS}, ${SCHEDULE_METHOD}, ${SCHEDULE_DELAY}, ${SCHEDULE_ANTICIPATION}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS})`,
+                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, SchedulePreferredHours, ScheduleMethod, ScheduleDelay, ScheduleAnticipation, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_PREFERRED_HOURS}, ${SCHEDULE_METHOD}, ${SCHEDULE_DELAY}, ${SCHEDULE_ANTICIPATION}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS}, ${LOW_SEASON})`,
                         (err) => {
                             if (err) {
                                 return rej(err);
@@ -50,11 +51,12 @@ export function initPreferences() {
                             ScheduleDelay,
                             ScheduleAnticipation,
                             DeadlineMinutesToSchedule,
-                            PuppeteerHeadless
+                            PuppeteerHeadless,
+                            LowSeason
                         } = rows[0];
 
                         db.run(
-                            `INSERT INTO Preference (HourToSchedule, DayToSchedule, SchedulePreferredHours, ScheduleMethod, ScheduleDelay, ScheduleAnticipation, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HourToSchedule}, ${DayToSchedule}, ${SchedulePreferredHours}, ${ScheduleMethod}, ${ScheduleDelay}, ${ScheduleAnticipation}, ${DeadlineMinutesToSchedule}, ${PuppeteerHeadless})`,
+                            `INSERT INTO Preference (HourToSchedule, DayToSchedule, SchedulePreferredHours, ScheduleMethod, ScheduleDelay, ScheduleAnticipation, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${HourToSchedule}, ${DayToSchedule}, ${SchedulePreferredHours}, ${ScheduleMethod}, ${ScheduleDelay}, ${ScheduleAnticipation}, ${DeadlineMinutesToSchedule}, ${PuppeteerHeadless}, ${LowSeason})`,
                             (err) => {
                                 if (err) {
                                     return rej(err);
@@ -80,6 +82,7 @@ export function defPreferences() {
         ScheduleDelay: SCHEDULE_DELAY,
         ScheduleAnticipation: SCHEDULE_ANTICIPATION,
         DeadlineMinutesToSchedule: DEADLINE_MINUTES_TO_SCHEDULE,
-        PuppeteerHeadless: PUPPETEER_HEADLESS
+        PuppeteerHeadless: PUPPETEER_HEADLESS,
+        LowSeason: LOW_SEASON
     };
 }

@@ -13,7 +13,7 @@ import {
     SCHEDULE_BY_ADDING,
     SCHEDULE_BY_AREA
 } from "../config/constants.config.js";
-import { decodeBase64 } from "./auth.service.js";
+import { decrypt } from "./auth.service.js";
 import { PUPPETEER_EXEC_PATH } from "../config/general.config.js";
 
 export function setSchedule() {
@@ -237,7 +237,7 @@ export async function schedule(
                             );
                             await page.type(
                                 "#txtPassword",
-                                decodeBase64(users[0]["Password"])
+                                await decrypt(users[0]["Password"])
                             );
                             await sleep(100);
                             await Promise.all([
@@ -573,7 +573,7 @@ async function scheduleByArea(page, hours, hoursDate, cells, hoursAvailable) {
                 try {
                     await page.click(`#${toUnschedule[i]}`);
                 } catch (err) {
-                    console.log(err.message);
+                    console.error(err.message);
                 }
             };
 

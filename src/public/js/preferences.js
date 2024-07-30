@@ -81,7 +81,8 @@ async function fetchPreferences() {
         scheduleMethod: data["ScheduleMethod"],
         schedulePreferredHours: data["SchedulePreferredHours"],
         deadlineMinutesToSchedule: data["DeadlineMinutesToSchedule"],
-        puppeteerHeadless: data["PuppeteerHeadless"]
+        puppeteerHeadless: data["PuppeteerHeadless"],
+        lowSeason: data["LowSeason"]
     };
     document.getElementById("dayToSchedule").value = preferences.dayToSchedule;
     const hourToSchedule = String(preferences.hourToSchedule);

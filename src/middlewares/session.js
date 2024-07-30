@@ -18,7 +18,7 @@ export function loggedIn(req, res, next) {
     });
 }
 
-export function loggedOut(req, res, next) {
+export function loggedOut(_, res, next) {
     db.serialize(() => {
         db.all("SELECT * FROM User", (err, users) => {
             if (err) {

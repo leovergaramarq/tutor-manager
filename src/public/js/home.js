@@ -21,7 +21,8 @@ window.addEventListener("load", () => {
                 ScheduleMethod: scheduleMethod,
                 SchedulePreferredHours: schedulePreferredHours,
                 DeadlineMinutesToSchedule: deadlineMinutesToSchedule,
-                PuppeteerHeadless: puppeteerHeadless
+                PuppeteerHeadless: puppeteerHeadless,
+                LowSeason: lowSeason
             } = data;
 
             preferences = {
@@ -32,7 +33,8 @@ window.addEventListener("load", () => {
                 scheduleMethod,
                 schedulePreferredHours,
                 deadlineMinutesToSchedule,
-                puppeteerHeadless
+                puppeteerHeadless,
+                lowSeason
             };
 
             // start clocks

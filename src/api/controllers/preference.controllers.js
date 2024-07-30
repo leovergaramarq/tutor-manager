@@ -8,7 +8,8 @@ import {
     SCHEDULE_METHOD,
     SCHEDULE_PREFERRED_HOURS,
     DEADLINE_MINUTES_TO_SCHEDULE,
-    PUPPETEER_HEADLESS
+    PUPPETEER_HEADLESS,
+    LOW_SEASON
 } from "../../config/general.config.js";
 
 export function get(req, res) {
@@ -37,7 +38,8 @@ export function upsert(req, res) {
         scheduleMethod,
         schedulePreferredHours,
         deadlineMinutesToSchedule,
-        puppeteerHeadless
+        puppeteerHeadless,
+        lowSeason
     } = req.body;
 
     if (!Object.keys(req.body).length) {
@@ -94,6 +96,10 @@ export function upsert(req, res) {
         return res.status(400).json({ message: "Invalid headless" });
     }
 
+    if (lowSeason !== undefined && (lowSeason < 0 || lowSeason > 1)) {
+        return res.status(400).json({ message: "Invalid season" });
+    }
+
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
             if (err) {
@@ -118,9 +124,10 @@ export function upsert(req, res) {
                     deadlineMinutesToSchedule = DEADLINE_MINUTES_TO_SCHEDULE;
                 if (puppeteerHeadless === undefined)
                     puppeteerHeadless = PUPPETEER_HEADLESS;
+                if (lowSeason === undefined) lowSeason = LOW_SEASON;
 
                 db.run(
-                    `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless})`,
+                    `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless}, ${lowSeason})`,
                     (err) => {
                         if (err) {
                             console.error(err);
@@ -157,9 +164,10 @@ export function upsert(req, res) {
                             DEADLINE_MINUTES_TO_SCHEDULE;
                     if (puppeteerHeadless === undefined)
                         puppeteerHeadless = PUPPETEER_HEADLESS;
+                    if (lowSeason === undefined) lowSeason = LOW_SEASON;
 
                     db.run(
-                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless})`,
+                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${hourToSchedule}, ${dayToSchedule}, ${scheduleAnticipation}, ${scheduleDelay}, ${scheduleMethod}, ${schedulePreferredHours}, ${deadlineMinutesToSchedule}, ${puppeteerHeadless}, ${lowSeason})`,
                         (err) => {
                             if (err) {
                                 console.error(err);
@@ -192,9 +200,10 @@ export function upsert(req, res) {
                         rows[0]["DeadlineMinutesToSchedule"];
                 if (puppeteerHeadless === undefined)
                     puppeteerHeadless = rows[0]["PuppeteerHeadless"];
+                if (lowSeason === undefined) lowSeason = rows[0]["LowSeason"];
 
                 db.run(
-                    `UPDATE Preference SET HourToSchedule = ${hourToSchedule}, DayToSchedule = ${dayToSchedule}, ScheduleAnticipation = ${scheduleAnticipation}, ScheduleDelay = ${scheduleDelay}, ScheduleMethod = ${scheduleMethod}, SchedulePreferredHours = ${schedulePreferredHours}, DeadlineMinutesToSchedule = ${deadlineMinutesToSchedule}, PuppeteerHeadless = ${puppeteerHeadless}`,
+                    `UPDATE Preference SET HourToSchedule = ${hourToSchedule}, DayToSchedule = ${dayToSchedule}, ScheduleAnticipation = ${scheduleAnticipation}, ScheduleDelay = ${scheduleDelay}, ScheduleMethod = ${scheduleMethod}, SchedulePreferredHours = ${schedulePreferredHours}, DeadlineMinutesToSchedule = ${deadlineMinutesToSchedule}, PuppeteerHeadless = ${puppeteerHeadless}, LowSeason = ${lowSeason}`,
                     (err) => {
                         if (err) {
                             console.error(err);
@@ -211,7 +220,7 @@ export function upsert(req, res) {
     });
 }
 
-export function reset(req, res) {
+export function reset(_, res) {
     db.serialize(() => {
         db.all("SELECT * FROM Preference", (err, rows) => {
             if (err) {
@@ -222,7 +231,7 @@ export function reset(req, res) {
             }
             if (!rows.length) {
                 db.run(
-                    `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS})`,
+                    `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS}, ${LOW_SEASON})`,
                     (err) => {
                         if (err) {
                             console.error(err);
@@ -243,7 +252,7 @@ export function reset(req, res) {
                             .json({ message: "Internal server error" });
                     }
                     db.run(
-                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS})`,
+                        `INSERT INTO Preference (HourToSchedule, DayToSchedule, ScheduleAnticipation, ScheduleDelay, ScheduleMethod, SchedulePreferredHours, DeadlineMinutesToSchedule, PuppeteerHeadless, LowSeason) VALUES (${HOUR_TO_SCHEDULE}, ${DAY_TO_SCHEDULE}, ${SCHEDULE_ANTICIPATION}, ${SCHEDULE_DELAY}, ${SCHEDULE_METHOD}, ${SCHEDULE_PREFERRED_HOURS}, ${DEADLINE_MINUTES_TO_SCHEDULE}, ${PUPPETEER_HEADLESS}, ${LOW_SEASON})`,
                         (err) => {
                             if (err) {
                                 console.error(err);
@@ -260,7 +269,7 @@ export function reset(req, res) {
                 });
             } else {
                 db.run(
-                    `UPDATE Preference SET HourToSchedule = ${HOUR_TO_SCHEDULE}, DayToSchedule = ${DAY_TO_SCHEDULE}, ScheduleAnticipation = ${SCHEDULE_ANTICIPATION}, ScheduleDelay = ${SCHEDULE_DELAY}, ScheduleMethod = ${SCHEDULE_METHOD}, SchedulePreferredHours = ${SCHEDULE_PREFERRED_HOURS}, DeadlineMinutesToSchedule = ${DEADLINE_MINUTES_TO_SCHEDULE}, PuppeteerHeadless = ${PUPPETEER_HEADLESS}`,
+                    `UPDATE Preference SET HourToSchedule = ${HOUR_TO_SCHEDULE}, DayToSchedule = ${DAY_TO_SCHEDULE}, ScheduleAnticipation = ${SCHEDULE_ANTICIPATION}, ScheduleDelay = ${SCHEDULE_DELAY}, ScheduleMethod = ${SCHEDULE_METHOD}, SchedulePreferredHours = ${SCHEDULE_PREFERRED_HOURS}, DeadlineMinutesToSchedule = ${DEADLINE_MINUTES_TO_SCHEDULE}, PuppeteerHeadless = ${PUPPETEER_HEADLESS}, LowSeason = ${LOW_SEASON}`,
                     (err) => {
                         if (err) {
                             console.error(err);

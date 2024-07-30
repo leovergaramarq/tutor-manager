@@ -3,7 +3,7 @@ import { db } from "../../config/db.config.js";
 import { sleep } from "../../helpers/utils.helper.js";
 import { URL_BILLING, URL_USD } from "../../config/constants.config.js";
 import { save as saveCookies } from "../../services/cookies.service.js";
-import { decodeBase64, encodeBase64 } from "../../services/auth.service.js";
+import { encrypt, decrypt } from "../../services/auth.service.js";
 import { PUPPETEER_EXEC_PATH } from "../../config/general.config.js";
 
 export function hello(_, res) {
@@ -20,7 +20,6 @@ export function hello(_, res) {
     });
 }
 
-// TODO: encrypt password
 export function login(req, res) {
     const { username, password } = req.body;
 
@@ -35,7 +34,7 @@ export function login(req, res) {
         });
 
     db.serialize(() => {
-        db.all("SELECT * FROM User", (err, users) => {
+        db.all("SELECT * FROM User", async (err, users) => {
             if (err) {
                 console.error(err);
                 return res
@@ -43,11 +42,11 @@ export function login(req, res) {
                     .json({ message: "Internal server error" });
             }
 
-            const insertUser = () => {
+            const { encrypted, authKey, authIv } = encrypt(password);
+
+            const insertUser = async () => {
                 db.run(
-                    `INSERT INTO User (Username, Password) VALUES ('${username}', '${encodeBase64(
-                        password
-                    )}')`,
+                    `INSERT INTO User (Username, Password, AuthKey, AuthIv) VALUES ('${username}', '${encrypted}', '${authKey}', '${authIv}')`,
                     (err) => {
                         if (err) {
                             console.error(err);
@@ -63,42 +62,33 @@ export function login(req, res) {
             };
 
             if (!users.length) {
-                insertUser();
+                await insertUser();
             } else if (users.length > 1) {
-                db.run("DELETE FROM User", (err) => {
+                db.run("DELETE FROM User", async (err) => {
                     if (err) {
                         console.error(err);
                         return res
                             .status(500)
                             .json({ message: "Internal server error" });
                     }
-                    insertUser();
+                    await insertUser();
                 });
             } else {
-                if (
-                    users[0]["Username"] !== username ||
-                    users[0]["Password"] !== encodeBase64(password)
-                ) {
-                    console.log("Updating user");
-                    db.run(
-                        `UPDATE User SET Username=${username}, Password=${password}`,
-                        (err) => {
-                            if (err) {
-                                console.error(err);
-                                return res
-                                    .status(500)
-                                    .json({ message: err.message });
-                            }
-                            res.status(201).json({
-                                message: "Logged in successfully"
-                            });
+                console.log("Updating user");
+                db.run(
+                    `UPDATE User SET Username = '${username}', Password = '${encrypted}', AuthKey = '${authKey}', AuthIv = '${authIv}'`,
+                    (err) => {
+                        if (err) {
+                            console.error(err);
+                            return res
+                                .status(500)
+                                .json({ message: err.message });
                         }
-                    );
-                } else {
-                    return res
-                        .status(201)
-                        .json({ message: "Logged in successfully" });
-                }
+                        res.status(201).json({
+                            message: "Logged in successfully"
+                        });
+                    }
+                );
             }
         });
     });
@@ -158,7 +148,7 @@ export function billing(_, res) {
                     await page.type("#txtUserName", users[0]["Username"]);
                     await page.type(
                         "#txtPassword",
-                        decodeBase64(users[0]["Password"])
+                        await decrypt(users[0]["Password"])
                     );
                     await sleep(100);
                     await page.click("#butSignIn");
