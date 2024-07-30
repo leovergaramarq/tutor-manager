@@ -1,4 +1,3 @@
-{{!-- TODO: show hours worked --}}
 {{> navbar }}
 {{> loading }}
 <main>
@@ -12,7 +11,7 @@
                             <span class="value" title="USD per waiting hour">2.5</span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesWaiting" placeholder="Minutes waiting" title="Minutes waiting">
+                                <input type="number" class="minutes-waiting" placeholder="Minutes waiting" title="Minutes waiting">
                             </span>
                             <span class="plus"></span>
                             <span class="value">
@@ -21,7 +20,7 @@
                             </span>
                             <span class="times"></span>
                             <span class="value">
-                                <input type="number" id="minutesInSession" placeholder="Minutes in session" title="Minutes in session">
+                                <input type="number" class="minutes-in-session" placeholder="Minutes in session" title="Minutes in session">
                             </span>
                         </span>
                         <hr>
@@ -33,7 +32,7 @@
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result1" readonly title="Payment in USD before bonus">
+                        <input type="number" class="payment-result1" readonly placeholder="USD before bonus" title="Payment in USD before bonus">
                         USD
                     </span>
                 </span>
@@ -41,17 +40,17 @@
             <div class="row">
                 <span class="step">
                     <span class="value">
-                        <input type="number" readonly class="payment-result1" title="Payment in USD before bonus">
+                        <input type="number" class="payment-result1" readonly placeholder="USD before bonus" title="Payment in USD before bonus">
                     </span>
                     <span class="plus"></span>
                     <span class="value">
-                        <input type="number" readonly placeholder="Bonus" id="bonus" title="Bonus">
+                        <input type="number" id="bonus" readonly placeholder="Bonus" title="Bonus">
                     </span>
                 </span>
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result2" readonly title="Payment in USD after bonus">
+                        <input type="number" class="payment-result2" readonly placeholder="USD after bonus" title="Payment in USD after bonus">
                         USD
                     </span>
                 </span>
@@ -59,7 +58,7 @@
             <div class="row">
                 <span class="step">
                     <span class="value">
-                        <input type="number" readonly class="payment-result2" title="Payment in USD after bonus">
+                        <input type="number" class="payment-result2" readonly placeholder="USD after bonus" title="Payment in USD after bonus">
                     </span>
                     <span class="times"></span>
                     <span class="value">
@@ -69,15 +68,17 @@
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="payment-result3 result" readonly title="Payment in COP">
+                        <input type="number" class="payment-result3 result" readonly placeholder="Payment in COP" title="Payment in COP">
                         COP
                     </span>
                 </span>
             </div>
         </div>
     </section>
-    <section class="section-time">
-        <h1>Time worked</h1>
+    <div class="sections-time">
+
+    <section class="section-online-time">
+        <h1>Online time</h1>
         <div class="area-calculation">
             <div class="row">
                 <span class="step">
@@ -98,13 +99,59 @@
                 <span class="equals"></span>
                 <span class="step">
                     <span class="value">
-                        <input type="number" class="time-result" readonly title="Percentage of time worked">
+                        <input type="number" class="online-time-result" readonly placeholder="% time worked" title="Percentage of time worked">
                         %
                     </span>
                 </span>
             </div>
         </div>
     </section>
+    <section class="section-time-worked">
+        <h1>Time worked</h1>
+        <div class="area-calculation">
+            <div class="row">
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="minutes-waiting" placeholder="Minutes waiting" title="Minutes waiting">
+                    </span>
+                    <span class="plus"></span>
+                    <span class="value">
+                        <input type="number" class="minutes-in-session" placeholder="Minutes in session" title="Minutes in session">
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="time-worked-result1" readonly placeholder="Minutes worked" title="Minutes worked">
+                        minutes
+                    </span>
+                </span>
+            </div>
+            <div class="row">
+                <span class="step">
+                    <span class="fraction">
+                        <span class="numerator">
+                            <span class="value">
+                                <input type="number" class="time-worked-result1" readonly placeholder="Minutes worked" title="Minutes worked">
+                            </span>
+                        </span>
+                        <hr>
+                        <span class="denominator">
+                            <span class="value">60</span>
+                        </span>
+                    </span>
+                </span>
+                <span class="equals"></span>
+                <span class="step">
+                    <span class="value">
+                        <input type="number" class="time-worked-result2" readonly placeholder="Hours worked" title="Hours worked">
+                        hours
+                    </span>
+                </span>
+            </div>
+        </div>
+    </section>
+    </div>
     <div class="section-buttons">
         <button class="btn-secondary" id="reset">Reset</button>
         <button class="btn-primary" id="refresh">Update</button>

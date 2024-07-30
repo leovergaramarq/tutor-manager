@@ -4,71 +4,92 @@ import { showLoading, hideLoading } from "./utils.js";
 window.addEventListener("load", async function () {
     initSelectors();
 
+    $minutesWaiting.forEach(($elem) =>
+        $elem.addEventListener("input", (e) => {
+            $minutesWaiting[($minutesWaiting.indexOf(e.target) + 1) % 2].value =
+                e.target.value;
+        })
+    );
+
+    $minutesInSession.forEach(($elem) =>
+        $elem.addEventListener("input", (e) => {
+            $minutesInSession[
+                ($minutesInSession.indexOf(e.target) + 1) % 2
+            ].value = e.target.value;
+        })
+    );
+
     loadData();
 
     document
         .querySelector(".section-payment")
-        .addEventListener("input", recalculatePayment);
+        .addEventListener("input", recalculateAll);
     document
-        .querySelector(".section-time")
-        .addEventListener("input", recalculateTime);
+        .querySelector(".section-online-time")
+        .addEventListener("input", recalculateAll);
+    document
+        .querySelector(".section-time-worked")
+        .addEventListener("input", recalculateAll);
 
     document
         .querySelector(".section-buttons")
         .addEventListener("click", (e) => {
             const { id } = e.target;
             if (id === "reset") {
-                // console.log(data);
-                // console.log(usd);
-                if (data) {
+                if (billingData) {
                     const {
                         minutesWaiting,
                         minutesInSession,
                         scheduledHours,
                         onlineHours
-                    } = data;
-                    $minutesWaiting.value = minutesWaiting;
-                    $minutesInSession.value = minutesInSession;
+                    } = billingData;
+
+                    $minutesWaiting.forEach(
+                        ($elem) => ($elem.value = minutesWaiting)
+                    );
+                    $minutesInSession.forEach(
+                        ($elem) => ($elem.value = minutesInSession)
+                    );
                     $scheduledHours.value = scheduledHours;
                     $onlineHours.value = onlineHours;
                 }
                 if (usd) $usd.value = usd;
 
-                recalculatePayment();
-                recalculateTime();
+                recalculateAll();
             } else if (id === "refresh") {
                 loadData();
             }
         });
 });
 
-async function fetchData() {
+async function fetchBillingData() {
     try {
         const { status, data: json } = await fetch("/api/billing");
         if (status !== 200) throw new Error(json.message);
         console.log(json);
-        data = json;
+        billingData = json;
     } catch (err) {
         console.error(err);
         return alert("Error fetching billing data");
     }
-    // data = {
-    //     scheduledHours: Math.floor(Math.random() * 100),
-    //     onlineHours: Math.floor(Math.random() * 100),
-    //     minutesWaiting: Math.floor(Math.random() * 1000),
-    //     minutesInSession: Math.floor(Math.random() * 1000),
+
+    // debug values
+    // billingData = {
+    //     scheduledHours: 56,
+    //     onlineHours: 41.16,
+    //     minutesWaiting: 1420,
+    //     minutesInSession: 1284
     // };
 
     const { scheduledHours, onlineHours, minutesWaiting, minutesInSession } =
-        data;
+        billingData;
 
-    $minutesInSession.value = minutesInSession;
-    $minutesWaiting.value = minutesWaiting;
+    $minutesInSession.forEach(($elem) => ($elem.value = minutesInSession));
+    $minutesWaiting.forEach(($elem) => ($elem.value = minutesWaiting));
     $scheduledHours.value = scheduledHours;
     $onlineHours.value = onlineHours;
 
-    recalculatePayment();
-    recalculateTime();
+    recalculateAll();
 }
 
 async function fetchUSD() {
@@ -82,65 +103,109 @@ async function fetchUSD() {
         return alert("Error fetching USD data");
     }
 
-    // usd = 4700;
-
+    // debug value
+    // usd = 4000;
     $usd.value = usd;
     recalculatePayment();
 }
 
+async function fetchSeason() {
+    try {
+        const { status, data } = await fetch("/api/preferences");
+        if (status !== 200) throw new Error(data.message);
+        lowSeason = data.LowSeason;
+    } catch (err) {
+        return console.error(err);
+    }
+}
+
+function recalculateAll() {
+    recalculatePayment();
+    recalculateOnlineTime();
+    recalculateTimeWorked();
+}
+
 function recalculatePayment() {
-    let res = +(
-        (2.5 * +$minutesWaiting.value +
-            +$usdPerHour.value * +$minutesInSession.value) /
+    let result = +(
+        (2.5 * +$minutesWaiting[0].value +
+            +$usdPerHour.value * +$minutesInSession[0].value) /
         60
     ).toFixed(1);
-    $paymentResult1.forEach((el) => (el.value = res));
+    $paymentResult1.forEach((el) => (el.value = result));
 
     const bonus = getBonus();
     $bonus.value = bonus;
-    res += getBonus();
-    $paymentResult2.forEach((el) => (el.value = res));
+    result += bonus;
+    $paymentResult2.forEach((el) => (el.value = result));
 
-    $paymentResult3.value = Math.floor(res * +$usd.value);
+    $paymentResult3.value = Math.floor(result * +$usd.value);
 }
 
-function recalculateTime() {
-    $timeResult.value = (
+function recalculateOnlineTime() {
+    $onlineTimeResult.value = (
         (+$onlineHours.value / +$scheduledHours.value) *
         100
     ).toFixed(1);
 }
 
+function recalculateTimeWorked() {
+    let result = +$minutesWaiting[1].value + +$minutesInSession[1].value;
+    $timeWorkedResult1.forEach(($elem) => {
+        $elem.value = result.toFixed(1);
+    });
+
+    result /= 60;
+    $timeWorkedResult2.value = result.toFixed(1);
+}
+
 function initSelectors() {
-    $minutesWaiting = document.getElementById("minutesWaiting");
-    $minutesInSession = document.getElementById("minutesInSession");
+    $minutesWaiting = Array.from(document.querySelectorAll(".minutes-waiting"));
+    $minutesInSession = Array.from(
+        document.querySelectorAll(".minutes-in-session")
+    );
     $scheduledHours = document.getElementById("scheduledHours");
     $onlineHours = document.getElementById("onlineHours");
 
-    $paymentResult1 = document.querySelectorAll(".payment-result1");
-    $paymentResult2 = document.querySelectorAll(".payment-result2");
+    $paymentResult1 = Array.from(document.querySelectorAll(".payment-result1"));
+    $paymentResult2 = Array.from(document.querySelectorAll(".payment-result2"));
     $paymentResult3 = document.querySelector(".payment-result3");
     $usd = document.getElementById("usd");
     $usdPerHour = document.getElementById("usdPerHour");
     $bonus = document.getElementById("bonus");
 
-    $timeResult = document.querySelector(".time-result");
+    $onlineTimeResult = document.querySelector(".online-time-result");
+    $timeWorkedResult1 = Array.from(
+        document.querySelectorAll(".time-worked-result1")
+    );
+    $timeWorkedResult2 = document.querySelector(".time-worked-result2");
 }
 
 function getBonus() {
-    const hours = (data.minutesInSession + data.minutesWaiting) / 60;
-    if (hours < 30) return 0;
-    if (hours < 60) return 40;
-    if (hours < 90) return 70;
-    if (hours < 120) return 100;
-    return 140;
+    const hours =
+        (+$minutesInSession[0].value + +$minutesWaiting[0].value) / 60;
+
+    if (lowSeason === 0) {
+        if (hours < 30) return 0;
+        if (hours < 60) return 40;
+        if (hours < 90) return 70;
+        if (hours < 120) return 100;
+
+        return 140;
+    } else {
+        if (hours < 25) return 0;
+        if (hours < 50) return 40;
+        if (hours < 75) return 70;
+        if (hours < 100) return 100;
+
+        return 140;
+    }
 }
 
 function loadData() {
     showLoading({
         belowNavbar: true
     });
-    Promise.all([fetchData(), fetchUSD()])
+    Promise.all([fetchBillingData(), fetchUSD(), fetchSeason()])
         .catch(console.error)
         .finally(hideLoading);
 }
@@ -155,7 +220,10 @@ let $paymentResult3;
 let $usd;
 let $usdPerHour;
 let $bonus;
-let $timeResult;
+let $onlineTimeResult;
+let $timeWorkedResult1;
+let $timeWorkedResult2;
 
-let data;
+let billingData;
 let usd;
+let lowSeason;

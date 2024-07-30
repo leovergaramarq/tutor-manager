@@ -33,21 +33,23 @@ document
                 puppeteerHeadless: document.getElementById("puppeteerHeadless")
                     .checked
                     ? 1
-                    : 0
+                    : 0,
+                lowSeason: document.getElementById("lowSeason").checked ? 1 : 0
             };
-            console.log(body);
+
             try {
                 const { status, data } = await fetch("/api/preferences", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body
                 });
+
                 if (status !== 200) throw new Error(data.message);
             } catch (err) {
                 console.error(err);
                 return alert("Error saving preferences");
             }
-            // fetchPreferences();
+
             alert("Preferences saved");
         } else if (id === "reset") {
             try {
@@ -66,6 +68,7 @@ document
 
 async function fetchPreferences() {
     let data;
+
     try {
         const res = await fetch("/api/preferences");
         if (res.status !== 200) throw new Error(data.message);
@@ -73,6 +76,7 @@ async function fetchPreferences() {
     } catch (err) {
         return console.error(err);
     }
+
     preferences = {
         hourToSchedule: data["HourToSchedule"],
         dayToSchedule: data["DayToSchedule"],
@@ -84,6 +88,7 @@ async function fetchPreferences() {
         puppeteerHeadless: data["PuppeteerHeadless"],
         lowSeason: data["LowSeason"]
     };
+
     document.getElementById("dayToSchedule").value = preferences.dayToSchedule;
     const hourToSchedule = String(preferences.hourToSchedule);
     document.getElementById("hourToSchedule").value = `${
@@ -100,6 +105,7 @@ async function fetchPreferences() {
         preferences.puppeteerHeadless;
     document.getElementById("schedulePreferredHours").checked =
         preferences.schedulePreferredHours;
+    document.getElementById("lowSeason").checked = preferences.lowSeason;
 }
 
 let preferences;
