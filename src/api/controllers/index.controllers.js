@@ -137,7 +137,7 @@ export function billing(_, res) {
 
                 await page.goto(URL_BILLING, {
                     timeout: 5000,
-                    waitUntil: ["domcontentloaded", "networkidle0"]
+                    waitUntil: ["load", "networkidle0"]
                 });
 
                 let newLogin;
@@ -193,7 +193,7 @@ export async function usd(_, res) {
         const page = await browser.newPage();
         await page.goto(URL_USD, {
             timeout: 10000,
-            waitUntil: ["domcontentloaded", "networkidle0"]
+            waitUntil: ["load", "networkidle0"]
         });
         // await page.waitForNavigation();
         // await sleep(500);
@@ -255,7 +255,7 @@ export async function validateCredentials(req, res) {
 
                 await page.goto(URL_BILLING, {
                     timeout: 5000,
-                    waitUntil: ["domcontentloaded", "networkidle0"]
+                    waitUntil: ["load", "networkidle0"]
                 });
                 // await page.waitForNavigation();
                 // await sleep(1000);

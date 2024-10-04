@@ -3,7 +3,7 @@ import { db } from "../config/db.config.js";
 import { URL_SCHEDULE } from "../config/constants.config.js";
 import { defPreferences } from "../config/preferences.config.js";
 import { save as saveCookies } from "./cookies.service.js";
-import { getDateSync, sleep } from "../helpers/utils.helper.js";
+import { getDateSync } from "../helpers/utils.helper.js";
 import {
     getDateFromSunday,
     getLocalTime,
@@ -220,7 +220,7 @@ export async function schedule(
 
                         await page.goto(URL_SCHEDULE, {
                             timeout: 5000,
-                            waitUntil: ["domcontentloaded", "networkidle0"] // TODO: check if this is necessary
+                            waitUntil: ["load"]
                         });
 
                         let newLogin;
@@ -239,14 +239,11 @@ export async function schedule(
                                 "#txtPassword",
                                 await decrypt(users[0]["Password"])
                             );
-                            await sleep(100);
+
                             await Promise.all([
                                 page.click("#butSignIn"),
                                 page.waitForNavigation({
-                                    waitUntil: [
-                                        "domcontentloaded",
-                                        "networkidle0"
-                                    ],
+                                    waitUntil: ["load"],
                                     timeout: 3000
                                 })
                             ]);
@@ -261,10 +258,7 @@ export async function schedule(
                             await Promise.all([
                                 page.click('[name="weekAhead"]'),
                                 page.waitForNavigation({
-                                    waitUntil: [
-                                        "domcontentloaded",
-                                        "networkidle0"
-                                    ],
+                                    waitUntil: ["load"],
                                     timeout: 3000
                                 })
                             ]);
@@ -273,40 +267,19 @@ export async function schedule(
                         localDate = getLocalTime();
 
                         if (localDateSched > localDate) {
-                            console.log(
-                                localDate.toLocaleTimeString(),
-                                "-",
-                                (localDateSched - localDate + scheduleDelay) /
-                                    1000,
-                                "seconds to schedule (with delay)"
-                            );
-
                             clearTimeout(timeoutFinishSched);
 
                             // wait for the hour to schedule
                             timeoutFinishSched = setTimeout(async () => {
-                                console.log(
-                                    getLocalTime().toLocaleTimeString(),
-                                    "-",
-                                    "Now!"
-                                );
-
                                 timeoutFinishSched = null;
                                 // reload page
                                 await page.reload({
-                                    waitUntil: [
-                                        "domcontentloaded",
-                                        "networkidle0"
-                                    ],
+                                    waitUntil: ["load"],
                                     timeout: 3000
                                 });
 
-                                console.log(
-                                    getLocalTime().toLocaleTimeString(),
-                                    "-",
-                                    "Now! x2"
-                                );
                                 await finishSchedule(
+                                    browser,
                                     page,
                                     hours,
                                     hoursDate,
@@ -319,6 +292,7 @@ export async function schedule(
                         } else {
                             // schedule immediately
                             await finishSchedule(
+                                browser,
                                 page,
                                 hours,
                                 hoursDate,
@@ -328,9 +302,6 @@ export async function schedule(
                                 callback
                             );
                         }
-
-                        // await page.close();
-                        // await browser.close();
                     } catch (err) {
                         console.error(err);
                         if (callback) callback(500, "Internal server error.");
@@ -342,6 +313,7 @@ export async function schedule(
 }
 
 async function finishSchedule(
+    browser,
     page,
     hours,
     hoursDate,
@@ -357,7 +329,7 @@ async function finishSchedule(
         if (!hoursAvailable) {
             console.log("No available hours. Reloading...");
             await page.reload({
-                waitUntil: ["domcontentloaded", "networkidle0"],
+                waitUntil: ["load"],
                 timeout: 3000
             });
             // await page.waitForSelector("#lblAvailableHours", { timeout: 3000 });
@@ -371,14 +343,20 @@ async function finishSchedule(
 
             page.evaluate(() => {
                 window.alert("No available hours.");
-            }).catch(console.error);
+            })
+                .catch(() => {})
+                .finally(() => {
+                    browser.on("disconnected", () => {
+                        console.log("Browser disconnected");
+                    });
+                    browser.disconnect();
+                });
         } else {
             await page.evaluate(() => {
                 window.alertOriginal = window.alert;
                 window.alert = () => {};
             });
 
-            // TODO: develop schedule method programmatically (call event handlers directly)
             const count =
                 scheduleMethod === SCHEDULE_BY_ADDING
                     ? await scheduleByAdding(page, hours, cells)
@@ -392,10 +370,18 @@ async function finishSchedule(
                       )
                     : 0;
 
+            // page.on("close", () => console.log("Browser closed"));
             page.evaluate(() => {
                 window.alert = window.alertOriginal;
                 window.alert("Scheduling finished.");
-            }).catch(console.error);
+            })
+                .catch(() => {})
+                .finally(() => {
+                    browser.on("disconnected", () => {
+                        console.log("Browser disconnected");
+                    });
+                    browser.disconnect();
+                });
 
             const msg = `Scheduled ${count}/${hours.length} hours.`;
             if (callback) callback(200, msg);

@@ -110,22 +110,26 @@ window.addEventListener("load", () => {
                     $buttons.forEach(($button) => ($button.disabled = true));
 
                     const result = await saveHours();
-                    if (!result) return alert("Error saving changes");
-                    try {
-                        const { status, data } = await fetch("/api/week", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: { week },
-                            timeout: 60000 // 1 minute
-                        });
-                        if (status !== 200) throw new Error(data.message);
-                        alert(
-                            "Success! Please check results on the Tutor.com website.\n\n" +
-                                data.message
-                        );
-                    } catch (err) {
-                        console.error(err);
-                        alert("Error scheduling time\n\n" + err.message);
+
+                    if (!result) {
+                        alert("Error saving changes");
+                    } else {
+                        try {
+                            const { status, data } = await fetch("/api/week", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: { week },
+                                timeout: 60000 // 1 minute
+                            });
+                            if (status !== 200) throw new Error(data.message);
+                            alert(
+                                "Success! Please check results on the Tutor.com website.\n\n" +
+                                    data.message
+                            );
+                        } catch (err) {
+                            console.error(err);
+                            alert("Error scheduling time\n\n" + err.message);
+                        }
                     }
                     $buttons.forEach(($button) => ($button.disabled = false));
                 }
