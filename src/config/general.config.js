@@ -19,14 +19,14 @@ export let PORT;
 export let PUPPETEER_EXEC_PATH;
 export let TIME_DIFF = 0;
 export const NODE_ENV = process.env.NODE_ENV || "production";
-export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 process.env.TZ = "America/New_York";
 // process.env.TZ = 'Europe/Madrid'; // for testing
 
 export function config(newConfig) {
+    const pathEnv = path.join(__dirname, ".env");
+
     if (newConfig && Object.keys(newConfig).length) {
         const { port, puppeteerExecPath } = newConfig;
-        const pathEnv = path.join(__dirname, ".env");
         const dataList = [];
 
         if (port !== undefined) dataList.push(`PORT="${port}"`);
@@ -42,7 +42,7 @@ export function config(newConfig) {
         }
     }
 
-    dotenv.config();
+    dotenv.config({ path: pathEnv });
     PORT = process.env.PORT;
     PUPPETEER_EXEC_PATH = process.env.PUPPETEER_EXEC_PATH;
 }

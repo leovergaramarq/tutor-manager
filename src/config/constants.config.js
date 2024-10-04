@@ -1,5 +1,4 @@
 import path from "path";
-import { LOCAL_TIMEZONE } from "./general.config.js";
 
 export const __dirname = process.execPath.endsWith("tutor-manager.exe")
     ? path.join(process.execPath, "..")
@@ -18,6 +17,7 @@ export const URL_BILLING =
 //     "https://prv.tutor.com/nGEN/Apps/SocWinSupportingPages/Provider/ConnectionInfo.aspx?ProgramGUID=b611858b-4d02-4afe-8053-d082bbc1c58e";
 export const URL_USD = "https://www.google.com/finance/quote/USD-COP";
 // export const URL_TIME_IS = "https://time.is";
+export const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 export const URL_WORLD_TIME_API = `https://worldtimeapi.org/api/timezone/${LOCAL_TIMEZONE}`;
 
 export const SCHEDULE_BY_ADDING = 0;

@@ -1,4 +1,5 @@
-import { LOCAL_TIMEZONE, TIME_DIFF } from "../config/general.config.js";
+import { LOCAL_TIMEZONE } from "../config/constants.config.js";
+import { TIME_DIFF } from "../config/general.config.js";
 
 export function getDateSync(...args) {
     const date = new Date(...args);
