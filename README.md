@@ -86,7 +86,3 @@ To bundle the project and generate an executable, open a terminal in the source 
 This process might take up to 2 minutes. It will generate a `dist` folder in the project root directory. There, you will find the executable file, as well as the necesary source code folders.
 
 Also, a `build` folder will be generated, with the source code converted from ES6 to CommonJS by Babel. This folder can be deleted.
-
-## Issues
-
-In the last release, the user credentials (that are required in the Login and stored in the local database) are not encrypted, but just encoded. That means that they can be read using a specialized software, and eventually decoded. Thus, you must keep your machine away from other people.
