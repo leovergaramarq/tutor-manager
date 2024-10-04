@@ -1,15 +1,15 @@
 {
   "name": "tutor-manager",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Tutor.com auto scheduler and facilitator of billing information",
   "private": true,
   "main": "./src/index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=production node ./src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon NODE_ENV=development ./src/index.js",
-    "build": "cross-env BUILD_ACTION=clean_build node ./build-helper.js && babel ./src/ -d ./build/src/ && cpy ./src/page/views/ ./build/ && cpy ./src/public/ ./build/ && cpy ./src/assets/ ./build/ && cpy ./node_modules/ ./build/ && cross-env BUILD_ACTION=package_json node ./build-helper.js",
-    "dist:exe": "pkg --public . && cross-env BUILD_ACTION=clean_dist node ./build-helper.js && cd ./build/ && cpy ./src/assets/ ../dist/ && cpy ./src/page/views/ ../dist/ && cpy ./src/public/ ../dist/ && move-file ./tutor-manager.exe ../dist/tutor-manager.exe && cd ../",
-    "dist": "npm run build && npm run dist:exe"
+    "build": "cross-env BUILD_ACTION=CLEAN_BUILD node ./build-helper.js && babel ./src/ -d ./build/src/ && cpy ./src/page/views/ ./build/ && cpy ./src/public/ ./build/ && cpy ./src/assets/ ./build/ && cpy ./node_modules/ ./build/ && cpy ./assets/ ./build/ && cross-env BUILD_ACTION=PARSE_PACKAGE_JSON node ./build-helper.js",
+    "dist": "pkg --public . && resedit ./build/tutor-manager.exe ./build/tutor-manager.exe --icon 1,./build/assets/favicon.ico --file-version 2.0.0.1 --file-description \"Tutor Manager\" && cross-env BUILD_ACTION=CLEAN_DIST node ./build-helper.js && cd ./build/ && cpy ./src/assets/ ../dist/ && cpy ./src/page/views/ ../dist/ && cpy ./src/public/ ../dist/ && move-file ./tutor-manager.exe ../dist/tutor-manager.exe && cd ../",
+    "build:dist": "npm run build && npm run dist"
   },
   "dependencies": {
     "axios": "0.27.2",
@@ -31,7 +31,8 @@
     "cross-env": "^7.0.3",
     "move-file-cli": "^3.0.0",
     "nodemon": "^2.0.20",
-    "pkg": "^5.8.1"
+    "pkg": "^5.8.1",
+    "resedit-cli": "2.0.0"
   },
   "pkg": {
     "assets": [

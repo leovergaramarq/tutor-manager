@@ -6,17 +6,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const action = process.env.BUILD_ACTION;
 
-if (action === "clean_build") {
+if (action === "CLEAN_BUILD") {
     const buildPath = path.join(__dirname, "build");
     if (fs.existsSync(buildPath)) {
         fs.rmSync(buildPath, { recursive: true });
     }
-} else if (action === "clean_dist") {
+} else if (action === "CLEAN_DIST") {
     const distPath = path.join(__dirname, "dist");
     if (fs.existsSync(distPath)) {
         fs.rmSync(distPath, { recursive: true });
     }
-} else if (action === "package_json") {
+} else if (action === "PARSE_PACKAGE_JSON") {
     const packageJson = JSON.parse(
         fs.readFileSync(path.join(__dirname, "package.json"))
     );
